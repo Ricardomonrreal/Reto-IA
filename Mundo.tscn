@@ -1,0 +1,31 @@
+[gd_scene load_steps=5 format=3 uid="uid://c5yq6urfypnkq"]
+
+[ext_resource type="ArrayMesh" uid="uid://b86yrdhgficb2" path="res://Buildings/building-e.obj" id="1_gejyx"]
+[ext_resource type="ArrayMesh" uid="uid://ti4x5sjkyhcr" path="res://Roads/road-driveway-double.obj" id="2_5yunf"]
+[ext_resource type="ArrayMesh" uid="uid://cklssbr6348ic" path="res://Buildings/building-d.obj" id="3_drrim"]
+[ext_resource type="ArrayMesh" uid="uid://ddir05dw4n6ov" path="res://Buildings/building-f.obj" id="4_as70k"]
+
+[node name="Node3D" type="Node3D"]
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(0.70710677, -0.4055798, 0.579228, 0, 0.81915206, 0.57357645, -0.70710677, -0.4055798, 0.579228, 8, 8, 8)
+projection = 1
+size = 12.688
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.70710677, -0.49999997, 0.49999997, 0, 0.70710677, 0.70710677, -0.70710677, -0.49999997, 0.49999997, 0, 0, 0)
+
+[node name="BuildingE" type="MeshInstance3D" parent="."]
+mesh = ExtResource("1_gejyx")
+
+[node name="RoadDrivewayDouble" type="MeshInstance3D" parent="."]
+transform = Transform3D(8.360001, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1)
+mesh = ExtResource("2_5yunf")
+
+[node name="BuildingD" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, 0)
+mesh = ExtResource("3_drrim")
+
+[node name="BuildingF" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, 0)
+mesh = ExtResource("4_as70k")

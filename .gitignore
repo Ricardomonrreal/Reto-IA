@@ -1,0 +1,14 @@
+# Godot-specific ignores
+.godot/
+export.cfg
+export_presets.cfg
+*.translation
+
+# OS generated files
+.DS_Store
+thumbs.db
+
+# User-specific settings (important for collaboration)
+# If you are working alone, you might want to version these,
+# but for team projects, it's best to ignore.
+.editorconfig
