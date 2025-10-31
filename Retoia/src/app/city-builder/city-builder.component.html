@@ -1,1 +1,54 @@
-<p>city-builder works!</p>
+<body>
+    <div class="game-container">
+        <div #renderCanvas class="canvas-container">
+    </div>
+
+    <!-- UI Overlay -->
+    <div class="ui-panel">
+        <div class="title">🏙️ CONSTRUCTOR DE CIUDAD</div>
+        <div class="score">💰 PUNTOS: {{ score }}</div>
+        <div class="subtitle">SELECCIONA HERRAMIENTA:</div>
+
+        <!-- Eraser button -->
+        <button
+        (click)="selectBuilding('eraser')"
+        [class.selected]="selectedBuilding === 'eraser'"
+        class="building-btn eraser-btn"
+        >
+        🗑️ BORRADOR<br/>
+        <span class="building-info">
+        Elimina edificios (Del/Supr)
+        </span>
+        </button>
+
+        <!-- Building buttons -->
+        <button
+        *ngFor="let building of buildingUIData | keyvalue"
+        (click)="selectBuilding(building.key)"
+        [class.selected]="selectedBuilding === building.key"
+        class="building-btn"
+        >
+        {{ building.value.icon }} {{ building.value.name }}<br/>
+        <span class="building-info">
+        💵 -{{ building.value.cost }} | ⭐ +{{ building.value.points }}
+        </span>
+        </button>
+
+        <div class="instructions-bottom">
+        <strong>Clic izquierdo:</strong> Construir/Borrar<br/>
+        <strong>Clic derecho:</strong> Borrar rápido<br/>
+        <strong>Tecla Del:</strong> Modo borrador
+        </div>
+    </div>
+
+    <!-- Instructions -->
+    <div class="instructions-panel">
+    <div class="instructions-title">📜 CONTROLES:</div>
+    • Selecciona herramienta<br/>
+    • Clic izquierdo para usar<br/>
+    • Clic derecho para borrar<br/>
+    • Tecla Delete para borrador<br/>
+    • ¡Construye tu ciudad!
+    </div>
+    </div>
+</body>

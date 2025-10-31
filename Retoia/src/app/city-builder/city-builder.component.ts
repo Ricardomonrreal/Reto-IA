@@ -2,6 +2,7 @@
 import { Component, OnInit, OnDestroy, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 interface BuildingConfig {
   color: number;
@@ -21,178 +22,10 @@ interface BuildingUI {
   selector: 'app-city-builder',
   standalone: true,
   imports: [CommonModule],
-  template: `
-    <div class="game-container">
-      <div #renderCanvas class="canvas-container"></div>
-      
-      <!-- UI Overlay -->
-      <div class="ui-panel">
-        <div class="title">🏙️ CONSTRUCTOR DE CIUDAD</div>
-        <div class="score">💰 PUNTOS: {{ score }}</div>
-        <div class="subtitle">SELECCIONA HERRAMIENTA:</div>
-        
-        <!-- Eraser button -->
-        <button
-          (click)="selectBuilding('eraser')"
-          [class.selected]="selectedBuilding === 'eraser'"
-          class="building-btn eraser-btn"
-        >
-          🗑️ BORRADOR<br/>
-          <span class="building-info">
-            Elimina edificios (Del/Supr)
-          </span>
-        </button>
-        
-        <!-- Building buttons -->
-        <button
-          *ngFor="let building of buildingUIData | keyvalue"
-          (click)="selectBuilding(building.key)"
-          [class.selected]="selectedBuilding === building.key"
-          class="building-btn"
-        >
-          {{ building.value.icon }} {{ building.value.name }}<br/>
-          <span class="building-info">
-            💵 -{{ building.value.cost }} | ⭐ +{{ building.value.points }}
-          </span>
-        </button>
-        
-        <div class="instructions-bottom">
-          <strong>Clic izquierdo:</strong> Construir/Borrar<br/>
-          <strong>Clic derecho:</strong> Borrar rápido<br/>
-          <strong>Tecla Del:</strong> Modo borrador
-        </div>
-      </div>
-
-      <!-- Instructions -->
-      <div class="instructions-panel">
-        <div class="instructions-title">📜 CONTROLES:</div>
-        • Selecciona herramienta<br/>
-        • Clic izquierdo para usar<br/>
-        • Clic derecho para borrar<br/>
-        • Tecla Delete para borrador<br/>
-        • ¡Construye tu ciudad!
-      </div>
-    </div>
-  `,
-  styles: [`
-    .game-container {
-      width: 100%;
-      height: 100vh;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .canvas-container {
-      width: 100%;
-      height: 100%;
-    }
-
-    .ui-panel {
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      background: rgba(0, 0, 0, 0.8);
-      color: #00ff00;
-      padding: 20px;
-      font-family: 'Courier New', monospace;
-      font-size: 16px;
-      border: 3px solid #00ff00;
-      box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
-      z-index: 100;
-      max-height: 90vh;
-      overflow-y: auto;
-    }
-
-    .title {
-      margin-bottom: 15px;
-      font-size: 20px;
-      text-align: center;
-    }
-
-    .score {
-      margin-bottom: 10px;
-    }
-
-    .subtitle {
-      margin-bottom: 10px;
-      font-size: 14px;
-      color: #ffff00;
-    }
-
-    .building-btn {
-      display: block;
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 8px;
-      background: #333;
-      color: #00ff00;
-      border: 2px solid #00ff00;
-      cursor: pointer;
-      font-family: 'Courier New', monospace;
-      font-size: 14px;
-      font-weight: bold;
-      text-align: left;
-      transition: all 0.2s;
-    }
-
-    .building-btn:hover {
-      background: #004400;
-    }
-
-    .building-btn.selected {
-      background: #00ff00;
-      color: #000;
-    }
-
-    .eraser-btn {
-      border-color: #ff0000;
-      color: #ff6666;
-    }
-
-    .eraser-btn:hover {
-      background: #440000;
-    }
-
-    .eraser-btn.selected {
-      background: #ff0000;
-      color: #fff;
-      border-color: #ff0000;
-    }
-
-    .building-info {
-      font-size: 12px;
-    }
-
-    .instructions-bottom {
-      margin-top: 15px;
-      font-size: 11px;
-      color: #888;
-      border-top: 1px solid #00ff00;
-      padding-top: 10px;
-      line-height: 1.6;
-    }
-
-    .instructions-panel {
-      position: absolute;
-      bottom: 20px;
-      right: 20px;
-      background: rgba(0, 0, 0, 0.8);
-      color: #00ff00;
-      padding: 15px;
-      font-family: 'Courier New', monospace;
-      font-size: 12px;
-      border: 2px solid #00ff00;
-      max-width: 250px;
-      z-index: 100;
-      line-height: 1.6;
-    }
-
-    .instructions-title {
-      font-weight: bold;
-      margin-bottom: 5px;
-    }
-  `]
+  templateUrl: 'city-builder.component.html',
+  styleUrls: ['city-builder.component.css']
 })
+
 export class CityBuilderComponent implements OnInit, OnDestroy {
   @ViewChild('renderCanvas', { static: true }) 
   private canvasRef!: ElementRef<HTMLDivElement>;
@@ -207,6 +40,8 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
     park: { icon: '🌳', name: 'PARQUE', cost: 5, points: 3 }
   };
 
+  private gltfLoader = new GLTFLoader();
+
   private scene!: THREE.Scene;
   private camera!: THREE.OrthographicCamera;
   private renderer!: THREE.WebGLRenderer;
@@ -217,20 +52,41 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
   private hoverPreview: THREE.Mesh | null = null;
   private animationId?: number;
 
-  private readonly gridSize = 10;
+  private clouds: THREE.Object3D[] = [];
+  private cloudCount = 50;
+  private cloudSpeed = 0.02; // velocidad de movimiento de las nubes
+
+  // FUNCIONES DE MOVIMIENTO DE CÁMARA
+  private isPanning = false;
+  private lastMousePosition = { x: 0, y: 0 };
+
+  private readonly cameraZoomSpeed = 1.1;
+  private readonly cameraMinZoom = 5;
+  private readonly cameraMaxZoom = 30;
+
+  private readonly gridSize = 50;
   private readonly cellSize = 2;
   private gridData: (string | null)[][] = [];
 
+  private readonly colorPalette: Record<string, string> = {
+    house: '#ff00c8ff',
+    tower: '#ff00c8ff',
+    factory: '#ff00c8ff',
+    park: '#95e1d3',
+    roof: '#8b4513'
+  };
+
   private buildingTypes: { [key: string]: BuildingConfig } = {
-    house: { color: 0x4ecdc4, height: 1.5, cost: 10, points: 5 },
-    tower: { color: 0x4ecdc4, height: 3, cost: 20, points: 15 },
-    factory: { color: 0xffe66d, height: 2, cost: 15, points: 10 },
-    park: { color: 0x95e1d3, height: 0.3, cost: 5, points: 3 }
+    house:  { color: 0, height: 1.5, cost: 10, points: 5 },
+    tower:  { color: 0, height: 3, cost: 20, points: 15 },
+    factory:{ color: 0, height: 2, cost: 15, points: 10 },
+    park:   { color: 0, height: 0.3, cost: 5, points: 3 }
   };
 
   ngOnInit(): void {
     this.initScene();
     this.createGround();
+    this.createClouds();
     this.animate();
     this.addEventListeners();
   }
@@ -255,7 +111,6 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
     // Scene
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(0x87CEEB);
-    this.scene.fog = new THREE.Fog(0x87CEEB, 20, 50);
 
     // Camera - Orthographic
     const aspect = window.innerWidth / window.innerHeight;
@@ -273,7 +128,7 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
     this.canvasRef.nativeElement.appendChild(this.renderer.domElement);
 
     // Lighting
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.2);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
     this.scene.add(ambientLight);
 
     const directionalLight = new THREE.DirectionalLight(0xffffff, 0.2);
@@ -290,15 +145,60 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
     this.scene.add(this.buildingsGroup);
   }
 
+  private createClouds(): void {
+    for (let i = 0; i < this.cloudCount; i++) {
+      const cloud = new THREE.Group(); // cada nube es un grupo de esferas
+
+      const sphereCount = 5 + Math.floor(Math.random() * 8); // 5-10 esferas por nube
+      for (let j = 0; j < sphereCount; j++) {
+        const radius = 1 + Math.random() * 2; // tamaño de cada “bola” de nube
+        const geometry = new THREE.SphereGeometry(radius, 16, 16);
+        const material = new THREE.MeshLambertMaterial({
+          color: 0xffffff,
+          transparent: true,
+          opacity: 0.6,
+        });
+        const sphere = new THREE.Mesh(geometry, material);
+
+        // posición relativa dentro de la nube
+        sphere.position.set(
+          (Math.random() - 0.5) * 4, 
+          (Math.random() - 0.5) * 2, 
+          (Math.random() - 0.5) * 4
+        );
+
+        cloud.add(sphere);
+      }
+
+      // posición inicial aleatoria en la escena
+      cloud.position.set(
+        (Math.random() - 0.5) * this.gridSize * this.cellSize,
+        10 + Math.random() * 10,
+        (Math.random() - 0.5) * this.gridSize * this.cellSize
+      );
+
+      this.scene.add(cloud);
+      this.clouds.push(cloud);
+    }
+  }
+
   private createGround(): void {
+    const baseColor = new THREE.Color('#ace45d'); // verde pasto
+
     for (let x = 0; x < this.gridSize; x++) {
       for (let z = 0; z < this.gridSize; z++) {
         const geometry = new THREE.BoxGeometry(
-          this.cellSize * 0.95, 0.1, this.cellSize * 0.95
+          this.cellSize * 1, 0.7, this.cellSize * 0.9
         );
+
+        // Creamos una copia del color para poder modificarlo ligeramente
+        const color = baseColor.clone();
+        color.offsetHSL(0, 0, (Math.random() - 0.6) * 0.2); // variación ligera de brillo
+
         const material = new THREE.MeshLambertMaterial({
-          color: (x + z) % 2 === 0 ? 0x4a7c4e : 0x5a8c5e
+          color: color
         });
+
         const cell = new THREE.Mesh(geometry, material);
         cell.position.set(
           x * this.cellSize - this.gridSize * this.cellSize / 2 + this.cellSize / 2,
@@ -312,34 +212,66 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
     }
   }
 
-  private createBuilding(type: string, x: number, z: number): THREE.Mesh {
-    const config = this.buildingTypes[type];
-    const geometry = new THREE.BoxGeometry(
-      this.cellSize * 0.8, config.height, this.cellSize * 0.8
+  private loadBuildingModel(url: string, onLoaded: (model: THREE.Object3D) => void) {
+    this.gltfLoader.load(
+      url,
+      (gltf) => {
+        const model = gltf.scene;
+        model.traverse((child) => {
+          if (child instanceof THREE.Mesh) {
+            child.castShadow = true;
+            child.receiveShadow = true;
+          }
+        });
+        onLoaded(model);
+      },
+      undefined,
+      (error) => {
+        console.error('Error cargando modelo GLB:', error);
+      }
     );
-    const material = new THREE.MeshLambertMaterial({ color: config.color });
-    const building = new THREE.Mesh(geometry, material);
-    building.position.set(
-      x * this.cellSize - this.gridSize * this.cellSize / 2 + this.cellSize / 2,
-      config.height / 2,
-      z * this.cellSize - this.gridSize * this.cellSize / 2 + this.cellSize / 2
-    );
-    building.castShadow = true;
-    building.receiveShadow = true;
-    building.userData = { type, gridX: x, gridZ: z };
+  }
 
-    // Add roof for house and tower
-    if (type === 'house' || type === 'tower') {
-      const roofGeometry = new THREE.ConeGeometry(this.cellSize * 0.6, 0.5, 4);
-      const roofMaterial = new THREE.MeshLambertMaterial({ color: 0x8b4513 });
-      const roof = new THREE.Mesh(roofGeometry, roofMaterial);
-      roof.position.y = config.height / 2 + 0.25;
-      roof.rotation.y = Math.PI / 4;
-      roof.castShadow = true;
-      building.add(roof);
+  private createBuilding3D(type: string, x: number, z: number) {
+    let modelUrl = '';
+    switch(type) {
+      case 'house': modelUrl = 'assets/building-d.glb'; break;
+      case 'tower': modelUrl = 'assets/building-d.glb'; break;
+      case 'factory': modelUrl = 'assets/building-d.glb'; break;
+      case 'park': modelUrl = 'assets/building-d.glb'; break;
     }
 
-    return building;
+    this.loadBuildingModel(modelUrl, (model) => {
+      // Ajuste de escala
+      model.scale.set(2, 2, 2); 
+
+      // Posición centrada en la celda
+      model.position.set(
+        x * this.cellSize - this.gridSize * this.cellSize / 2 + this.cellSize / 2,
+        0,
+        z * this.cellSize - this.gridSize * this.cellSize / 2 + this.cellSize / 2
+      );
+
+      this.buildingsGroup.add(model);
+      this.gridData[x][z] = type; // mantenemos la referencia
+    });
+  }
+
+  private showHoverPreview(x: number, z: number) {
+    if (this.hoverPreview) {
+      this.scene.remove(this.hoverPreview);
+      this.hoverPreview = null;
+    }
+
+    const geometry = new THREE.BoxGeometry(this.cellSize * 0.9, 1, this.cellSize * 0.9);
+    const material = new THREE.MeshLambertMaterial({ color: 0xffffff, transparent: true, opacity: 0.5 });
+    this.hoverPreview = new THREE.Mesh(geometry, material);
+    this.hoverPreview.position.set(
+      x * this.cellSize - this.gridSize * this.cellSize / 2 + this.cellSize / 2,
+      0.5, // altura del preview
+      z * this.cellSize - this.gridSize * this.cellSize / 2 + this.cellSize / 2
+    );
+    this.scene.add(this.hoverPreview);
   }
 
   private removeBuilding(x: number, z: number): void {
@@ -373,6 +305,13 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
     this.score = Math.max(0, this.score - Math.floor(config.points / 2));
   }
 
+  private clampCameraPosition(): void {
+    const halfMap = (this.gridSize * this.cellSize) / 2;
+
+    this.camera.position.x = THREE.MathUtils.clamp(this.camera.position.x, -halfMap, halfMap);
+    this.camera.position.z = THREE.MathUtils.clamp(this.camera.position.z, -halfMap, halfMap);
+  }
+
   private onMouseMove = (event: MouseEvent): void => {
     this.mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     this.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
@@ -385,17 +324,29 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
       this.hoverPreview = null;
     }
 
+    if (this.isPanning) {
+      const dx = event.clientX - this.lastMousePosition.x;
+      const dy = event.clientY - this.lastMousePosition.y;
+
+      // mueve la cámara en coordenadas del plano X-Z
+      const moveX = -dx * 0.01;
+      const moveZ = dy * 0.01;
+
+      this.camera.position.x += moveX;
+      this.camera.position.z += moveZ;
+
+      this.lastMousePosition = { x: event.clientX, y: event.clientY };
+
+      this.clampCameraPosition();
+    }
+    
     if (intersects.length > 0) {
       const cell = intersects[0].object as THREE.Mesh;
       const { gridX, gridZ } = cell.userData;
 
       // Show preview only for building mode (not eraser)
       if (this.selectedBuilding !== 'eraser' && !this.gridData[gridX][gridZ]) {
-        this.hoverPreview = this.createBuilding(this.selectedBuilding, gridX, gridZ);
-        const material = this.hoverPreview.material as THREE.MeshLambertMaterial;
-        material.transparent = true;
-        material.opacity = 0.5;
-        this.scene.add(this.hoverPreview);
+        this.showHoverPreview(gridX, gridZ);
       }
       // Show red highlight for eraser mode
       else if (this.selectedBuilding === 'eraser' && this.gridData[gridX][gridZ]) {
@@ -440,8 +391,7 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
         if (!this.gridData[gridX][gridZ]) {
           const config = this.buildingTypes[this.selectedBuilding];
           if (this.score >= config.cost) {
-            const building = this.createBuilding(this.selectedBuilding, gridX, gridZ);
-            this.buildingsGroup.add(building);
+            this.createBuilding3D(this.selectedBuilding, gridX, gridZ);
             this.gridData[gridX][gridZ] = this.selectedBuilding;
             this.score = this.score - config.cost + config.points;
           }
@@ -480,6 +430,13 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
       const buildings = ['house', 'tower', 'factory', 'park'];
       this.selectedBuilding = buildings[parseInt(event.key) - 1];
     }
+
+    const move = 0.5;
+    if (event.key === 'w') this.camera.position.z -= move;
+    if (event.key === 's') this.camera.position.z += move;
+    if (event.key === 'a') this.camera.position.x -= move;
+    if (event.key === 'd') this.camera.position.x += move;
+    this.clampCameraPosition();
   };
 
   private onWindowResize = (): void => {
@@ -491,12 +448,46 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
     this.renderer.setSize(window.innerWidth, window.innerHeight);
   };
 
+  private onMouseDown = (event: MouseEvent): void => {
+    if (event.button === 1 || event.button === 2) { // middle or right button
+      this.isPanning = true;
+      this.lastMousePosition = { x: event.clientX, y: event.clientY };
+    }
+  };
+
+  private onMouseUp = (): void => {
+    this.isPanning = false;
+  };
+
+  private onMouseWheel = (event: WheelEvent): void => {
+    event.preventDefault(); // ⛔ Evitamos zoom del navegador y scrolling
+
+    // Sensibilidad del zoom (ajústalo si lo sientes muy rápido/lento)
+    const zoomStrength = 0.1;
+
+    // event.deltaY > 0 = alejar, < 0 = acercar
+    const zoomDelta = -event.deltaY * zoomStrength * 0.001;
+
+    // Aplicamos zoom progresivo (suave)
+    this.camera.zoom = THREE.MathUtils.clamp(
+      this.camera.zoom + zoomDelta,
+      0.5,   // 🔽 mínimo (más lejos)
+      4.0    // 🔼 máximo (más cerca)
+    );
+
+    this.camera.updateProjectionMatrix();
+  };
+
   private addEventListeners(): void {
     window.addEventListener('mousemove', this.onMouseMove);
     window.addEventListener('click', this.onClick);
     window.addEventListener('contextmenu', this.onRightClick);
     window.addEventListener('keydown', this.onKeyDown);
     window.addEventListener('resize', this.onWindowResize);
+
+    window.addEventListener('mousedown', this.onMouseDown);
+    window.addEventListener('mouseup', this.onMouseUp);
+    window.addEventListener('wheel', this.onMouseWheel);
   }
 
   private removeEventListeners(): void {
@@ -505,10 +496,22 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
     window.removeEventListener('contextmenu', this.onRightClick);
     window.removeEventListener('keydown', this.onKeyDown);
     window.removeEventListener('resize', this.onWindowResize);
+
+    window.removeEventListener('mousedown', this.onMouseDown);
+    window.removeEventListener('mouseup', this.onMouseUp);
+    window.removeEventListener('wheel', this.onMouseWheel);
   }
 
   private animate = (): void => {
     this.animationId = requestAnimationFrame(this.animate);
+    this.clouds.forEach(cloud => {
+      cloud.position.x += this.cloudSpeed;
+
+      if (cloud.position.x > this.gridSize * this.cellSize / 2 + 5) {
+        cloud.position.x = -this.gridSize * this.cellSize / 2 - 5; // loop
+      }
+    });
+
     this.renderer.render(this.scene, this.camera);
   };
 }
