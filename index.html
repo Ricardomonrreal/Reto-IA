@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EcoIa - Construye un Futuro Sostenible</title>
+<style>
+/* === ESTILO GENERAL === */
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg, #0a5275, #1b8ab3);
+  color: white;
+  margin: 0;
+  padding: 0;
+  text-align: center;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+h1 {
+  font-size: 2.6em;
+  margin-bottom: 0.2em;
+}
+
+p.subtitle {
+  font-style: italic;
+  font-size: 1.1em;
+  color: #cce6f9;
+  margin-bottom: 1em;
+}
+
+/* === BOTONES === */
+button {
+  background: #ffffff22;
+  border: 2px solid white;
+  color: white;
+  padding: 12px 30px;
+  font-size: 1.1em;
+  margin: 10px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: 0.3s;
+  width: 80%;
+  max-width: 300px;
+}
+
+button:hover, button:focus {
+  background: white;
+  color: #0a5275;
+  transform: scale(1.05);
+}
+
+/* === CONTENEDORES === */
+.container {
+  max-width: 700px;
+  width: 90%;
+  margin: 20px auto;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 25px;
+  border-radius: 15px;
+  box-shadow: 0 0 15px rgba(0,0,0,0.3);
+}
+
+#game, #menu, #resultado {
+  display: none;
+}
+
+/* === SELECTORES === */
+select {
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  font-size: 1em;
+  margin: 8px;
+  width: 90%;
+  max-width: 300px;
+}
+
+label {
+  font-weight: bold;
+  color: #e6f3ff;
+}
+
+#textoResultado {
+  white-space: pre-line;
+  font-size: 1.1em;
+  line-height: 1.5em;
+  background: rgba(255,255,255,0.1);
+  padding: 15px;
+  border-radius: 10px;
+  margin-top: 10px;
+}
+
+footer {
+  margin-top: auto;
+  padding: 10px;
+  font-size: 0.9em;
+  color: #b0e0ff;
+}
+
+/* === RESPONSIVE === */
+@media (max-width: 768px) {
+  h1 { font-size: 2.2em; }
+  button { font-size: 1em; padding: 10px 25px; }
+  select { font-size: 1em; }
+}
+
+@media (max-width: 480px) {
+  body {
+    padding: 10px;
+  }
+  h1 { font-size: 1.9em; }
+  .container {
+    padding: 20px 15px;
+  }
+  button {
+    width: 100%;
+    margin: 8px 0;
+  }
+  select {
+    width: 100%;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- ======= MENÚ PRINCIPAL ======= -->
+<div id="menu" class="container" style="display:block;">
+  <h1>EcoIa</h1>
+  <p class="subtitle">Construyendo un mundo sostenible 🌍</p>
+  <button onclick="nuevaSimulacion()">🌱 Nueva Simulación</button>
+  <button onclick="mostrarGuia()">📘 Guía Didáctica</button>
+  <button onclick="mostrarEscenas()">🎮 Escenarios</button>
+  <button onclick="mostrarAcerca()">ℹ️ Acerca del Juego</button>
+</div>
+
+<!-- ======= PANTALLA DE SIMULACIÓN ======= -->
+<div id="game" class="container">
+  <h2>Simulación de Proyecto</h2>
+  <p>Selecciona las condiciones de tu proyecto:</p>
+
+  <label>Mapa:</label><br>
+  <select id="mapa">
+    <option value="sísmica">Zona sísmica urbana</option>
+    <option value="agua">Área rural con escasez de agua</option>
+    <option value="costero">Ecosistema frágil costero</option>
+    <option value="densidad">Ciudad con alta densidad poblacional</option>
+  </select><br><br>
+
+  <label>Tipo de infraestructura:</label><br>
+  <select id="infra">
+    <option value="residencial">Comunidad residencial sostenible</option>
+    <option value="parque">Parque ecológico</option>
+    <option value="carretera">Carretera verde</option>
+    <option value="energia">Red de energía renovable</option>
+  </select><br><br>
+
+  <label>Materiales:</label><br>
+  <select id="material">
+    <option value="reciclados">Materiales reciclados</option>
+    <option value="tradicional">Concreto tradicional</option>
+    <option value="compuestos">Compuestos sostenibles</option>
+    <option value="madera">Madera certificada</option>
+  </select><br><br>
+
+  <button onclick="evaluarProyecto()">Evaluar Proyecto 🌿</button>
+</div>
+
+<!-- ======= RESULTADOS ======= -->
+<div id="resultado" class="container">
+  <h2>📊 Resultado de tu proyecto</h2>
+  <p id="textoResultado"></p>
+  <button onclick="volverMenu()">Volver al Menú</button>
+</div>
+
+<!-- ======= ESCENAS EDUCATIVAS ======= -->
+<div id="escenas" class="container" style="display:none;">
+  <h2>🎬 Escenarios Educativos</h2>
+  <div id="listaEscenas"></div>
+  <button onclick="volverMenu()">Volver</button>
+</div>
+
+<script>
+// === FUNCIONES DEL JUEGO ===
+
+function ocultarTodo() {
+  ['menu','game','resultado','escenas'].forEach(id => {
+    document.getElementById(id).style.display = 'none';
+  });
+}
+
+function nuevaSimulacion() {
+  ocultarTodo();
+  document.getElementById('game').style.display = 'block';
+}
+
+function mostrarGuia() {
+  alert("📘 Guía Didáctica:\nAprende sobre sostenibilidad, planificación urbana y uso responsable de recursos.\nCada decisión afecta el equilibrio ambiental, económico y social.");
+}
+
+function mostrarAcerca() {
+  alert("ℹ️ EcoIa - Inspirado en los ODS (Objetivos de Desarrollo Sostenible), especialmente el ODS 9: Industria, innovación e infraestructura sostenible.");
+}
+
+function volverMenu() {
+  ocultarTodo();
+  document.getElementById('menu').style.display = 'block';
+}
+
+function evaluarProyecto() {
+  const mapa = document.getElementById('mapa').value;
+  const infra = document.getElementById('infra').value;
+  const material = document.getElementById('material').value;
+
+  let impacto = 0, economia = 0;
+
+  // === MATERIALES ===
+  if (material === "reciclados") { impacto = 9; economia = 7; }
+  if (material === "tradicional") { impacto = 4; economia = 9; }
+  if (material === "compuestos") { impacto = 8; economia = 8; }
+  if (material === "madera") { impacto = 7; economia = 6; }
+
+  // === AJUSTES POR MAPA Y TIPO ===
+  if (mapa === "sísmica") impacto -= 1;
+  if (mapa === "agua" && infra === "residencial") impacto -= 2;
+  if (mapa === "costero" && infra === "carretera") impacto -= 1;
+  if (infra === "energia") economia += 1;
+
+  let sostenibilidad = ((impacto + economia) / 2).toFixed(1);
+  let riesgo = (10 - sostenibilidad + (Math.random() * 2 - 1)).toFixed(1);
+  riesgo = Math.max(0, Math.min(10, riesgo));
+
+  let mensaje = `🌱 Sostenibilidad: ${sostenibilidad}/10\n⚠️ Riesgo: ${riesgo}/10\n\n`;
+
+  if (sostenibilidad >= 8)
+    mensaje += "🏆 Excelente trabajo. Has logrado un proyecto altamente sostenible.";
+  else if (sostenibilidad >= 6)
+    mensaje += "👍 Buen resultado, aunque hay áreas por mejorar.";
+  else
+    mensaje += "❌ Tu proyecto no cumple los criterios de sostenibilidad.";
+
+  document.getElementById('textoResultado').innerText = mensaje;
+  ocultarTodo();
+  document.getElementById('resultado').style.display = 'block';
+}
+
+// === ESCENAS DIDÁCTICAS ===
+const escenasData = [
+  {
+    titulo: "🌳 Escena 1: Ciudad Verde",
+    objetivo: "Diseñar una pequeña ciudad sostenible.",
+    retos: "Crear áreas verdes, ciclovías, transporte público eficiente, manejo de residuos y espacios de emprendimiento local.",
+    aprendizaje: "Urbanismo sostenible y planificación comunitaria."
+  },
+  {
+    titulo: "⚡ Escena 2: Red de Energía Limpia",
+    objetivo: "Implementar una red eléctrica eficiente en una región con recursos limitados.",
+    retos: "Seleccionar fuentes renovables, distribuir energía sin sobrecargas y reducir emisiones.",
+    aprendizaje: "Uso de energías renovables y eficiencia energética."
+  },
+  {
+    titulo: "🛣️ Escena 3: Infraestructura Resiliente",
+    objetivo: "Construir una carretera o puente en una zona de riesgo.",
+    retos: "Elegir materiales adecuados, rutas seguras y minimizar el impacto ambiental.",
+    aprendizaje: "Diseño de infraestructuras resilientes y gestión de riesgos."
+  },
+  {
+    titulo: "♻️ Escena 4: Comunidad Circular",
+    objetivo: "Desarrollar una comunidad autosuficiente que reduzca al mínimo sus desechos.",
+    retos: "Implementar reciclaje, compostaje y energías limpias.",
+    aprendizaje: "Economía circular y consumo responsable."
+  },
+  {
+    titulo: "🏭 Escena 5: Innovación Industrial Sostenible",
+    objetivo: "Crear un parque industrial moderno y ambientalmente responsable.",
+    retos: "Integrar fábricas limpias y fomentar innovación local.",
+    aprendizaje: "Industrialización inclusiva y sostenible."
+  }
+];
+
+function mostrarEscenas() {
+  ocultarTodo();
+  const contenedor = document.getElementById("listaEscenas");
+  contenedor.innerHTML = "";
+  escenasData.forEach(e => {
+    contenedor.innerHTML += `
+      <div style="text-align:left; margin-bottom:20px;">
+        <h3>${e.titulo}</h3>
+        <p><b>🎯 Objetivo:</b> ${e.objetivo}</p>
+        <p><b>🚧 Retos:</b> ${e.retos}</p>
+        <p><b>📚 Aprendizaje:</b> ${e.aprendizaje}</p>
+      </div>
+      <hr style="border:1px solid rgba(255,255,255,0.2);">
+    `;
+  });
+  document.getElementById('escenas').style.display = 'block';
+}
+</script>
+
+<footer>
+  © 2025 EcoIa — Aprendiendo a construir un futuro sostenible.
+</footer>
+</body>
+</html>
