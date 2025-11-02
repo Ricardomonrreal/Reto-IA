@@ -1,12 +1,17 @@
 import { Component } from '@angular/core';
-import { CityBuilderComponent } from './city-builder/city-builder.component';
+import { RouterOutlet } from '@angular/router';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CityBuilderComponent],
-  template: '<app-city-builder></app-city-builder>'
+  imports: [RouterOutlet],
+  template: `
+    <nav style="background: #eee; padding: 10px;">
+      <a routerLink="/city" style="margin-right: 10px;">🏙️ Ciudad</a>
+      <a routerLink="/energy">⚡ Energía</a>
+    </nav>
+
+    <router-outlet></router-outlet>
+  `
 })
-export class AppComponent {
-  title = 'Retoia';
-}
+export class AppComponent {}

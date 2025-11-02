@@ -1,0 +1,444 @@
+.game-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.canvas-container {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.ui-panel {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  background: rgba(0, 0, 0, 0.9);
+  color: #00ff00;
+  padding: 20px;
+  font-family: 'Courier New', monospace;
+  font-size: 16px;
+  border: 3px solid #00ff00;
+  box-shadow: 0 0 30px rgba(0, 255, 0, 0.6), inset 0 0 20px rgba(0, 255, 0, 0.1);
+  z-index: 100;
+  max-height: 90vh;
+  overflow-y: auto;
+  max-width: 320px;
+  border-radius: 4px;
+}
+
+.title {
+  margin-bottom: 15px;
+  font-size: 22px;
+  text-align: center;
+  font-weight: bold;
+  text-shadow: 0 0 10px #00ff00;
+  letter-spacing: 1px;
+}
+
+.score {
+  background: rgba(0, 255, 0, 0.1);
+  padding: 12px;
+  margin-bottom: 15px;
+  border: 2px solid #00ff00;
+  text-align: center;
+  font-size: 18px;
+  font-weight: bold;
+  text-shadow: 0 0 5px #00ff00;
+}
+
+/* Estadísticas de Energía (EXISTENTE) */
+.energy-stats {
+  background: rgba(0, 0, 0, 0.5);
+  border: 2px solid #ffff00;
+  padding: 12px;
+  margin-bottom: 15px;
+  border-radius: 4px;
+}
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.stat-row:last-child {
+  margin-bottom: 0;
+}
+
+.stat-label {
+  color: #aaa;
+}
+
+.stat-value {
+  font-weight: bold;
+  text-shadow: 0 0 5px currentColor;
+}
+
+.stat-value.production {
+  color: #00ff00;
+}
+
+.stat-value.consumption {
+  color: #ff9800;
+}
+
+.stat-value.efficiency {
+  color: #00bfff;
+}
+
+.stat-value.emissions {
+  color: #ff6b6b;
+}
+
+.subtitle {
+  margin-bottom: 12px;
+  font-size: 14px;
+  color: #ffff00;
+  text-align: center;
+  font-weight: bold;
+}
+
+.building-btn {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 8px;
+  background: #1a1a1a;
+  color: #00ff00;
+  border: 2px solid #00ff00;
+  cursor: pointer;
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  font-weight: bold;
+  text-align: left;
+  transition: all 0.2s;
+  border-radius: 4px;
+}
+
+.building-btn:hover {
+  background: #003300;
+  transform: translateX(5px);
+}
+
+.building-btn.selected {
+  background: #00ff00;
+  color: #000;
+  box-shadow: 0 0 15px rgba(0, 255, 0, 0.8);
+}
+
+.building-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #2a1010;
+  color: #ff6666;
+  border-color: #ff0000;
+}
+
+.building-btn:disabled:hover {
+  transform: none;
+}
+
+.cable-btn {
+  border-color: #ffff00;
+  color: #ffff00;
+}
+
+.cable-btn:hover {
+  background: #333300;
+}
+
+.cable-btn.selected {
+  background: #ffff00;
+  color: #000;
+  box-shadow: 0 0 15px rgba(255, 255, 0, 0.8);
+}
+
+.eraser-btn {
+  border-color: #ff0000;
+  color: #ff6666;
+}
+
+.eraser-btn:hover {
+  background: #440000;
+}
+
+.eraser-btn.selected {
+  background: #ff0000;
+  color: #fff;
+  border-color: #ff0000;
+  box-shadow: 0 0 15px rgba(255, 0, 0, 0.8);
+}
+
+.building-info {
+  font-size: 11px;
+  margin-top: 4px;
+  opacity: 0.8;
+}
+
+.instructions-bottom {
+  margin-top: 15px;
+  font-size: 11px;
+  color: #888;
+  border-top: 1px solid #00ff00;
+  padding-top: 10px;
+  line-height: 1.8;
+}
+
+.instructions-panel {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  background: rgba(0, 0, 0, 0.9);
+  color: #00ff00;
+  padding: 15px;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  border: 2px solid #00ff00;
+  box-shadow: 0 0 20px rgba(0, 255, 0, 0.4);
+  max-width: 280px;
+  z-index: 100;
+  line-height: 1.8;
+  border-radius: 4px;
+}
+
+.instructions-title {
+  font-weight: bold;
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: #ffff00;
+  text-shadow: 0 0 5px #ffff00;
+}
+
+.action-indicator {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.9);
+  color: #00ff00;
+  padding: 12px 24px;
+  border: 2px solid #00ff00;
+  box-shadow: 0 0 20px rgba(0, 255, 0, 0.6);
+  font-size: 14px;
+  font-weight: bold;
+  z-index: 100;
+  border-radius: 4px;
+  text-shadow: 0 0 10px #00ff00;
+  font-family: 'Courier New', monospace;
+  white-space: nowrap;
+}
+
+.action-indicator.eraser-mode {
+  color: #ff0000;
+  border-color: #ff0000;
+  box-shadow: 0 0 20px rgba(255, 0, 0, 0.6);
+  text-shadow: 0 0 10px #ff0000;
+}
+
+.action-indicator.cable-mode {
+  color: #ffff00;
+  border-color: #ffff00;
+  box-shadow: 0 0 20px rgba(255, 255, 0, 0.6);
+  text-shadow: 0 0 10px #ffff00;
+}
+
+/* Alerta de Estado */
+.alert-panel {
+  position: absolute;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.9);
+  padding: 15px 25px;
+  border: 3px solid;
+  border-radius: 8px;
+  font-family: 'Courier New', monospace;
+  z-index: 99;
+  min-width: 300px;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.alert-success {
+  border-color: #00ff00;
+  box-shadow: 0 0 30px rgba(0, 255, 0, 0.5);
+}
+
+.alert-danger {
+  border-color: #ff0000;
+  box-shadow: 0 0 30px rgba(255, 0, 0, 0.5);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 0 30px rgba(255, 0, 0, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 50px rgba(255, 0, 0, 0.8);
+  }
+}
+
+.alert-content {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.alert-icon {
+  font-size: 32px;
+}
+
+.alert-content strong {
+  display: block;
+  font-size: 16px;
+  margin-bottom: 4px;
+}
+
+.alert-success strong {
+  color: #00ff00;
+}
+
+.alert-danger strong {
+  color: #ff0000;
+}
+
+.alert-sub {
+  font-size: 12px;
+  color: #aaa;
+}
+
+/* Scrollbar personalizado */
+.ui-panel::-webkit-scrollbar {
+  width: 8px;
+}
+
+.ui-panel::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.ui-panel::-webkit-scrollbar-thumb {
+  background: #00ff00;
+  border-radius: 4px;
+}
+
+.ui-panel::-webkit-scrollbar-thumb:hover {
+  background: #00ff00;
+  box-shadow: 0 0 10px #00ff00;
+}
+
+/* 🟢 Botón de Toggle de Energía (Adaptado al estilo Matrix) */
+.energy-toggle-btn {
+  margin-top: 10px;
+  background-color: #003300; /* Fondo más oscuro */
+  color: #00ff00; /* Texto verde neón */
+  border: 2px solid #00ff00; /* Borde neón */
+  border-radius: 4px; /* Bordes más cuadrados */
+  padding: 8px 15px; /* Más padding para que se vea mejor */
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  text-shadow: 0 0 5px #00ff00;
+}
+
+.energy-toggle-btn:hover {
+  background-color: #006600; /* Verde más brillante al pasar el ratón */
+  box-shadow: 0 0 10px rgba(0, 255, 0, 0.8);
+}
+
+/* === 🟡 Panel de Energía (Adaptado al estilo Matrix) === */
+.energy-panel {
+  position: absolute;
+  right: 20px;
+  top: 20px; /* Alineado con .ui-panel, cambié 50px a 20px */
+  width: 250px;
+  background: rgba(0, 0, 0, 0.9); /* Fondo oscuro coherente */
+  color: #ffff00; /* Color principal amarillo para distinguirlo */
+  border: 3px solid #ffff00; /* Borde amarillo neón */
+  border-radius: 4px; /* Bordes más cuadrados */
+  padding: 15px;
+  box-shadow: 0 0 30px rgba(255, 255, 0, 0.6), inset 0 0 20px rgba(255, 255, 0, 0.1); /* Efecto neón amarillo */
+  font-family: 'Courier New', monospace;
+  z-index: 100;
+}
+
+.energy-title {
+  font-size: 18px; /* Ajuste de tamaño */
+  font-weight: bold;
+  margin-bottom: 12px;
+  text-align: center;
+  color: #ffff00; /* Título amarillo neón */
+  text-shadow: 0 0 10px #ffff00;
+  letter-spacing: 1px;
+}
+
+/* 🟡 Botón dentro del Panel de Energía (Adaptado al estilo Matrix) */
+.energy-btn {
+ display: block;
+  width: 100%;
+  margin: 8px 0;
+  padding: 10px; /* Ajuste de padding */
+  border: 2px solid #ffff00; /* Borde amarillo neón */
+  background-color: #333300; /* Fondo oscuro sutil */
+  color: #ffff00;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  text-shadow: 0 0 5px #ffff00;
+}
+
+.energy-btn:hover {
+  background-color: #666600; /* Fondo más brillante al pasar el ratón */
+  box-shadow: 0 0 10px rgba(255, 255, 0, 0.8);
+}
+
+.energy-stats {
+  /* Se reutiliza la clase .energy-stats existente arriba */
+  /* No es necesario redefinir aquí, a menos que se quiera otro estilo */
+  font-size: 14px; /* Ajuste de tamaño de fuente para el panel */
+}
+
+/* 🔴 Botón de Cerrar (Adaptado al estilo Matrix para Peligro/Error) */
+.close-btn {
+  margin-top: 15px;
+  background-color: #440000; /* Fondo oscuro para el rojo */
+  color: #ff6666; /* Color de texto rojo sutil */
+  border: 2px solid #ff0000; /* Borde rojo neón */
+  border-radius: 4px;
+  padding: 8px 15px; /* Ajuste de padding */
+  width: 100%;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  text-shadow: 0 0 5px #ff0000;
+}
+
+.close-btn:hover {
+  background-color: #660000; /* Fondo rojo más oscuro al pasar el ratón */
+  box-shadow: 0 0 10px rgba(255, 0, 0, 0.8);
+  color: #fff; /* Color blanco al pasar el ratón */
+}
