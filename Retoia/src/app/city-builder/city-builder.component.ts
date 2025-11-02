@@ -118,7 +118,7 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
     this.camera = new THREE.OrthographicCamera(
       -d * aspect, d * aspect, d, -d, 1, 1000
     );
-    this.camera.position.set(20, 20, 20);
+    this.camera.position.set(-20, 20, -20);
     this.camera.lookAt(0, 0, 0);
 
     // Renderer
@@ -188,7 +188,7 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
     for (let x = 0; x < this.gridSize; x++) {
       for (let z = 0; z < this.gridSize; z++) {
         const geometry = new THREE.BoxGeometry(
-          this.cellSize * 1, 0.7, this.cellSize * 0.9
+          this.cellSize * 1, 0.2, this.cellSize * 0.9
         );
 
         // Creamos una copia del color para poder modificarlo ligeramente
@@ -235,9 +235,9 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
   private createBuilding3D(type: string, x: number, z: number) {
     let modelUrl = '';
     switch(type) {
-      case 'house': modelUrl = 'assets/building-d.glb'; break;
-      case 'tower': modelUrl = 'assets/building-d.glb'; break;
-      case 'factory': modelUrl = 'assets/building-d.glb'; break;
+      case 'house': modelUrl = 'assets/building-a.glb'; break;
+      case 'tower': modelUrl = 'assets/building-b.glb'; break;
+      case 'factory': modelUrl = 'assets/building-c.glb'; break;
       case 'park': modelUrl = 'assets/building-d.glb'; break;
     }
 
@@ -252,6 +252,20 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
         z * this.cellSize - this.gridSize * this.cellSize / 2 + this.cellSize / 2
       );
 
+      model.traverse((child) => {
+        if (child instanceof THREE.Mesh) {
+          child.castShadow = true;
+          child.receiveShadow = true;
+
+          if (child.material instanceof THREE.MeshStandardMaterial) {
+            child.material.emissive = new THREE.Color(0xffffff);
+            child.material.emissiveIntensity = 0.02; // brillo tenue
+          }
+        }
+      });
+
+      //model.userData.x = x;
+      //model.userData.gridZ = z;
       this.buildingsGroup.add(model);
       this.gridData[x][z] = type; // mantenemos la referencia
     });
@@ -463,7 +477,7 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
     event.preventDefault(); // ⛔ Evitamos zoom del navegador y scrolling
 
     // Sensibilidad del zoom (ajústalo si lo sientes muy rápido/lento)
-    const zoomStrength = 0.1;
+    const zoomStrength = 0.25;
 
     // event.deltaY > 0 = alejar, < 0 = acercar
     const zoomDelta = -event.deltaY * zoomStrength * 0.001;
