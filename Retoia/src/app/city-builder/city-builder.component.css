@@ -92,32 +92,3 @@
 .building-info {
     font-size: 12px;
 }
-
-.instructions-bottom {
-    margin-top: 15px;
-    font-size: 11px;
-    color: #888;
-    border-top: 1px solid #00ff00;
-    padding-top: 10px;
-    line-height: 1.6;
-}
-
-.instructions-panel {
-    position: absolute;
-    bottom: 20px;
-    right: 20px;
-    background: rgba(0, 0, 0, 0.8);
-    color: #00ff00;
-    padding: 15px;
-    font-family: 'Courier New', monospace;
-    font-size: 12px;
-    border: 2px solid #00ff00;
-    max-width: 250px;
-    z-index: 100;
-    line-height: 1.6;
-}
-
-.instructions-title {
-    font-weight: bold;
-    margin-bottom: 5px;
-}
