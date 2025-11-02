@@ -1,0 +1,130 @@
+<div class="game-container">
+    <div #renderCanvas class="canvas-container"></div>
+
+    <div class="ui-panel">
+        <div class="title">
+            PARQUE INDUSTRIAL SOSTENIBLE
+        </div>
+
+        <div class="score">
+            <div class="stat-row">
+                PRESUPUESTO: <span style="color: #ffff00;">{{ money }}€</span>
+            </div>
+            
+            <div class="industry-stats">
+                <div class="stat-row">
+                    <span class="stat-label">
+                        Producción:</span>
+                    <span class="stat-value production">{{ totalProduction }} Unidades</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">
+                        Residuos:</span>
+                    <span class="stat-value waste">{{ totalWaste }} kg/h</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">
+                        Innovación:</span>
+                    <span class="stat-value innovation">{{ innovationIndex }}%</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="subtitle">EDIFICIOS Y TECNOLOGÍAS: </div>
+        
+        @for (building of industrialBuildingsUI | keyvalue; track building.key) {
+      <button
+        class="building-btn"
+        [class.selected]="selectedBuilding === building.key"
+        [disabled]="money < building.value.cost && selectedBuilding !== building.key"
+        (click)="selectBuilding(building.key)">
+        <span>{{ building.value.icon }} {{ building.value.name }}</span>
+        <div class="building-info">
+            Costo: {{ building.value.cost }}€ | Producción: {{ building.value.production }} Unidades
+        </div>
+      </button>
+    }
+
+        <button
+            class="building-btn logistics-btn"
+            [class.selected]="selectedBuilding === 'logistics'"
+            (click)="selectBuilding('logistics')">
+            <span> CONEXIÓN LOGÍSTICA</span>
+            <div class="building-info">
+                Conecta edificios para optimizar flujo
+            </div>
+        </button>
+
+        <div class="instructions-bottom">
+            <div style="color: #ffff00; margin-bottom: 5px;"> OBJETIVO:</div>
+            <div> Alcanzar producción objetivo</div>
+            <div> Reducir residuos industriales</div>
+            <div> Fomentar innovación local</div>
+            
+            <div style="margin-top: 8px; border-top: 1px solid #00ff00; padding-top: 8px;">
+                <strong>Zonas Rojas:</strong> Concentración de Residuos
+            </div>
+        </div>
+    </div>
+
+    <div class="instructions-panel">
+        <div class="instructions-title"> CONTROLES</div>
+        <div>
+            <span style="color: #ffff00;">Click</span>: Colocar Edificio
+        </div>
+        <div>
+            <span style="color: #ffff00;">Modo Logística</span>: Click en 2 puntos para conectar
+        </div>
+        <div>
+            <span style="color: #ffff00;">Mouse Wheel</span>: Zoom
+        </div>
+        <div>
+            <span style="color: #ffff00;">Click Medio/Der</span>: Mover cámara
+        </div>
+
+        <div style="margin-top: 12px; padding-top: 8px; border-top: 1px solid #00ff00;">
+            <div style="color: #ffffee; font-weight: bold; margin-bottom: 5px;"> GUÍA RÁPIDA: </div>
+            <div style="font-size: 11px;">
+                <div><strong>Fábrica Limpia:</strong> Producción con pocos residuos</div>
+                <div><strong>Centro I+D:</strong> Aumenta el índice de Innovación</div>
+                <div><strong>Planta de Reciclaje:</strong> Gestiona residuos industriales</div>
+                <div><strong>Almacén:</strong> Optimiza el flujo de materiales</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="action-indicator"
+    [class.eraser-mode]="(selectedBuilding ?? '') === 'eraser'"
+    [class.logistics-mode]="(selectedBuilding ?? '') === 'logistics'">
+    
+    <span *ngIf="(selectedBuilding ?? '') === 'eraser'"> MODO BORRADOR</span>
+
+    <span *ngIf="(selectedBuilding ?? '') === 'logistics'">
+        MODO LOGÍSTICA - Click para conectar
+    </span>
+
+    <span *ngIf="(selectedBuilding ?? '') !== 'eraser' && (selectedBuilding ?? '') !== 'logistics'">
+        COLOCANDO: {{ industrialBuildingsUI[selectedBuilding ?? '']?.name || 'NADA' }}
+    </span>
+</div>
+
+
+    <div class="alert-panel"
+        [class.alert-success]="totalWaste <= maxWasteTarget"
+        [class.alert-danger]="totalWaste > maxWasteTarget">
+        <div *ngIf="totalWaste <= maxWasteTarget" class="alert-content">
+            <span class="alert-icon">✓</span>
+            <div>
+                <strong>INDUSTRIA SOSTENIBLE</strong>
+                <div class="alert-sub">Residuos bajo control y eficiencia alta</div>
+            </div>
+        </div>
+        <div *ngIf="totalWaste > maxWasteTarget" class="alert-content">
+            <span class="alert-icon">⚠️</span>
+            <div>
+                <strong>ALERTA DE RESIDUOS</strong>
+                <div class="alert-sub">Necesitas más gestión de residuos o fábricas limpias</div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,299 @@
+/* === ESTILO GENERAL DEL JUEGO === */
+.game-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: radial-gradient(circle at center, #0a0f16 0%, #000 100%);
+}
+
+.canvas-container {
+  width: 100%;
+  height: 100%;
+}
+
+/* === PANEL PRINCIPAL (UI) === */
+.ui-panel {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  background: rgba(10, 20, 30, 0.95);
+  color: #00ffaa;
+  padding: 20px;
+  font-family: 'Courier New', monospace;
+  font-size: 15px;
+  border: 3px solid #00ffaa;
+  box-shadow: 0 0 25px rgba(0, 255, 170, 0.5), inset 0 0 10px rgba(0, 255, 170, 0.1);
+  border-radius: 6px;
+  max-height: 90vh;
+  overflow-y: auto;
+  max-width: 320px;
+  z-index: 100;
+}
+
+.title {
+  font-size: 22px;
+  font-weight: bold;
+  text-align: center;
+  color: #00ffaa;
+  text-shadow: 0 0 10px #00ffaa;
+  margin-bottom: 15px;
+}
+
+.subtitle {
+  font-size: 14px;
+  text-align: center;
+  color: #ffff00;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+/* === ESTADÍSTICAS === */
+.score {
+  background: rgba(0, 255, 170, 0.1);
+  padding: 12px;
+  border: 2px solid #00ffaa;
+  border-radius: 5px;
+  margin-bottom: 15px;
+  text-align: center;
+  font-weight: bold;
+  text-shadow: 0 0 5px #00ffaa;
+}
+
+.industry-stats {
+  background: rgba(0, 0, 0, 0.6);
+  border: 2px solid #0099ff;
+  padding: 12px;
+  margin-top: 10px;
+  border-radius: 5px;
+}
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.stat-label {
+  color: #bbb;
+}
+
+.stat-value {
+  font-weight: bold;
+  text-shadow: 0 0 6px currentColor;
+}
+
+.stat-value.production {
+  color: #00ffaa;
+}
+.stat-value.waste {
+  color: #ff6666;
+}
+.stat-value.innovation {
+  color: #00ccff;
+}
+
+/* === BOTONES DE EDIFICIOS === */
+.building-btn {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 8px;
+  background: #0f1f29;
+  color: #00ffaa;
+  border: 2px solid #00ffaa;
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  font-weight: bold;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.building-btn:hover {
+  background: #004d40;
+  transform: translateX(5px);
+  box-shadow: 0 0 10px rgba(0, 255, 170, 0.6);
+}
+
+.building-btn.selected {
+  background: #00ffaa;
+  color: #001f1f;
+  box-shadow: 0 0 20px rgba(0, 255, 170, 0.9);
+}
+
+.building-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: #332222;
+  color: #ff5555;
+  border-color: #ff0000;
+}
+
+.logistics-btn {
+  border-color: #0099ff;
+  color: #0099ff;
+}
+
+.logistics-btn:hover {
+  background: #002244;
+  box-shadow: 0 0 10px rgba(0, 153, 255, 0.6);
+}
+
+/* === INFORMACIÓN DE BOTONES === */
+.building-info {
+  font-size: 11px;
+  margin-top: 4px;
+  opacity: 0.8;
+}
+
+/* === INSTRUCCIONES === */
+.instructions-bottom {
+  margin-top: 15px;
+  font-size: 11px;
+  color: #ccc;
+  border-top: 1px solid #00ffaa;
+  padding-top: 10px;
+  line-height: 1.6;
+}
+
+/* === PANEL DE CONTROLES === */
+.instructions-panel {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  background: rgba(10, 20, 30, 0.95);
+  color: #00ffaa;
+  padding: 15px;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  border: 2px solid #00ffaa;
+  box-shadow: 0 0 20px rgba(0, 255, 170, 0.4);
+  border-radius: 6px;
+  max-width: 280px;
+  z-index: 100;
+}
+
+.instructions-title {
+  font-weight: bold;
+  color: #ffff00;
+  text-shadow: 0 0 6px #ffff00;
+  margin-bottom: 6px;
+}
+
+/* === INDICADOR DE ACCIÓN === */
+.action-indicator {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.9);
+  color: #00ffaa;
+  border: 2px solid #00ffaa;
+  padding: 10px 25px;
+  border-radius: 5px;
+  font-weight: bold;
+  text-shadow: 0 0 10px #00ffaa;
+  box-shadow: 0 0 15px rgba(0, 255, 170, 0.6);
+  z-index: 99;
+}
+
+.action-indicator.logistics-mode {
+  color: #0099ff;
+  border-color: #0099ff;
+  box-shadow: 0 0 20px rgba(0, 153, 255, 0.6);
+}
+
+.action-indicator.eraser-mode {
+  color: #ff0000;
+  border-color: #ff0000;
+  box-shadow: 0 0 20px rgba(255, 0, 0, 0.6);
+}
+
+/* === ALERTAS === */
+.alert-panel {
+  position: absolute;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(10, 20, 30, 0.95);
+  padding: 15px 25px;
+  border-radius: 8px;
+  font-family: 'Courier New', monospace;
+  z-index: 99;
+  border: 3px solid;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.alert-success {
+  border-color: #00ffaa;
+  box-shadow: 0 0 25px rgba(0, 255, 170, 0.5);
+}
+
+.alert-danger {
+  border-color: #ff0000;
+  box-shadow: 0 0 25px rgba(255, 0, 0, 0.5);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 25px rgba(255, 0, 0, 0.5); }
+  50% { box-shadow: 0 0 50px rgba(255, 0, 0, 0.9); }
+}
+
+.alert-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.alert-icon {
+  font-size: 30px;
+}
+
+.alert-success strong {
+  color: #00ffaa;
+}
+
+.alert-danger strong {
+  color: #ff6666;
+}
+
+.alert-sub {
+  font-size: 12px;
+  color: #aaa;
+}
+
+/* === SCROLL PERSONALIZADO === */
+.ui-panel::-webkit-scrollbar {
+  width: 8px;
+}
+.ui-panel::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.3);
+}
+.ui-panel::-webkit-scrollbar-thumb {
+  background: #00ffaa;
+  border-radius: 4px;
+}
+.ui-panel::-webkit-scrollbar-thumb:hover {
+  background: #00ffcc;
+  box-shadow: 0 0 10px #00ffaa;
+}
+/* === FIN DEL ESTILO === */
