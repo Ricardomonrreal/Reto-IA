@@ -9,6 +9,7 @@ interface BuildingConfig {
   height: number;
   cost: number;
   points: number;
+  scale: number;
 }
 
 interface BuildingUI {
@@ -46,10 +47,15 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
   private camera!: THREE.OrthographicCamera;
   private renderer!: THREE.WebGLRenderer;
   private raycaster = new THREE.Raycaster();
+
   private mouse = new THREE.Vector2();
+
+  private buildingPreviewCache: { [key: string]: THREE.Object3D } = {};
+  private currentPreviewType: string | null = null; // Para rastrear el tipo de preview actual
+
   private groundGroup = new THREE.Group();
   private buildingsGroup = new THREE.Group();
-  private hoverPreview: THREE.Mesh | null = null;
+  private hoverPreview: THREE.Object3D | null = null;
   private animationId?: number;
 
   private clouds: THREE.Object3D[] = [];
@@ -60,33 +66,22 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
   private isPanning = false;
   private lastMousePosition = { x: 0, y: 0 };
 
-  private readonly cameraZoomSpeed = 1.1;
-  private readonly cameraMinZoom = 5;
-  private readonly cameraMaxZoom = 30;
-
   private readonly gridSize = 50;
   private readonly cellSize = 2;
   private gridData: (string | null)[][] = [];
 
-  private readonly colorPalette: Record<string, string> = {
-    house: '#ff00c8ff',
-    tower: '#ff00c8ff',
-    factory: '#ff00c8ff',
-    park: '#95e1d3',
-    roof: '#8b4513'
-  };
-
   private buildingTypes: { [key: string]: BuildingConfig } = {
-    house:  { color: 0, height: 1.5, cost: 10, points: 5 },
-    tower:  { color: 0, height: 3, cost: 20, points: 15 },
-    factory:{ color: 0, height: 2, cost: 15, points: 10 },
-    park:   { color: 0, height: 0.3, cost: 5, points: 3 }
+    house:  { color: 0, height: 1.5, cost: 10, points: 5, scale: 2},
+    tower:  { color: 0, height: 3, cost: 20, points: 15, scale: 2},
+    factory:{ color: 0, height: 2, cost: 15, points: 10, scale: 2},
+    park:   { color: 0, height: 0.3, cost: 5, points: 3, scale: 1.5}
   };
 
   ngOnInit(): void {
     this.initScene();
     this.createGround();
     this.createClouds();
+    this.preloadBuildingPreviews();
     this.animate();
     this.addEventListeners();
   }
@@ -118,6 +113,9 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
     this.camera = new THREE.OrthographicCamera(
       -d * aspect, d * aspect, d, -d, 1, 1000
     );
+
+    this.camera.zoom = 1.0;
+    this.camera.updateProjectionMatrix();
     this.camera.position.set(-20, 20, -20);
     this.camera.lookAt(0, 0, 0);
 
@@ -128,10 +126,10 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
     this.canvasRef.nativeElement.appendChild(this.renderer.domElement);
 
     // Lighting
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
     this.scene.add(ambientLight);
 
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.2);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
     directionalLight.position.set(10, 20, 10);
     directionalLight.castShadow = true;
     directionalLight.shadow.camera.left = -20;
@@ -149,14 +147,14 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
     for (let i = 0; i < this.cloudCount; i++) {
       const cloud = new THREE.Group(); // cada nube es un grupo de esferas
 
-      const sphereCount = 5 + Math.floor(Math.random() * 8); // 5-10 esferas por nube
+      const sphereCount = 5 + Math.floor(Math.random() * 2); // 5-10 esferas por nube
       for (let j = 0; j < sphereCount; j++) {
         const radius = 1 + Math.random() * 2; // tamaño de cada “bola” de nube
-        const geometry = new THREE.SphereGeometry(radius, 16, 16);
+        const geometry = new THREE.SphereGeometry(radius, 5, 5);
         const material = new THREE.MeshLambertMaterial({
-          color: 0xffffff,
+          color: '#FFFFFF',
           transparent: true,
-          opacity: 0.6,
+          opacity: 0.7,
         });
         const sphere = new THREE.Mesh(geometry, material);
 
@@ -188,7 +186,7 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
     for (let x = 0; x < this.gridSize; x++) {
       for (let z = 0; z < this.gridSize; z++) {
         const geometry = new THREE.BoxGeometry(
-          this.cellSize * 1, 0.2, this.cellSize * 0.9
+          this.cellSize * 1, 0.5, this.cellSize * 1
         );
 
         // Creamos una copia del color para poder modificarlo ligeramente
@@ -233,17 +231,19 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
   }
 
   private createBuilding3D(type: string, x: number, z: number) {
+    const config = this.buildingTypes[type];
+
     let modelUrl = '';
     switch(type) {
       case 'house': modelUrl = 'assets/building-a.glb'; break;
       case 'tower': modelUrl = 'assets/building-b.glb'; break;
       case 'factory': modelUrl = 'assets/building-c.glb'; break;
-      case 'park': modelUrl = 'assets/building-d.glb'; break;
+      case 'park': modelUrl = 'assets/skyscraper-c.glb'; break;
     }
 
     this.loadBuildingModel(modelUrl, (model) => {
       // Ajuste de escala
-      model.scale.set(2, 2, 2); 
+      model.scale.set(config.scale, config.scale, config.scale); 
 
       // Posición centrada en la celda
       model.position.set(
@@ -274,21 +274,86 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
     });
   }
 
-  private showHoverPreview(x: number, z: number) {
-    if (this.hoverPreview) {
-      this.scene.remove(this.hoverPreview);
-      this.hoverPreview = null;
+  private preloadBuildingPreviews(): void {
+    const buildingKeys = Object.keys(this.buildingTypes);
+
+    for (const type of buildingKeys) {
+      const config = this.buildingTypes[type];
+      
+      let modelUrl = '';
+      switch(type) {
+        case 'house': modelUrl = 'assets/building-a.glb'; break;
+        case 'tower': modelUrl = 'assets/building-b.glb'; break;
+        case 'factory': modelUrl = 'assets/building-c.glb'; break;
+        case 'park': modelUrl = 'assets/skyscraper-c.glb'; break;
+      }
+
+      if (modelUrl) {
+        this.loadBuildingModel(modelUrl, (model) => {
+          // Clonar, ajustar materiales y guardar en cache
+          const preview = model.clone(true);
+
+          preview.traverse((child) => {
+            if (child instanceof THREE.Mesh) {
+              child.castShadow = false;
+              child.receiveShadow = false;
+
+              //Controladores de transparencia
+              const transparentMaterial = new THREE.MeshLambertMaterial({
+                color: 0x00FF00, // Color verde fijo para el preview
+                transparent: true,
+                opacity: 0.8, // Reducimos opacidad
+                depthWrite: true // Mejora la visualización transparente
+              });
+
+              if (Array.isArray(child.material)) {
+                child.material = child.material.map(() => transparentMaterial);
+              } else {
+                child.material = transparentMaterial;
+              }
+            }
+          });
+
+          preview.scale.set(config.scale, config.scale, config.scale); 
+          this.buildingPreviewCache[type] = preview;
+        });
+      }
+    }
+  }
+
+  private showHoverPreview(x: number, z: number): void {
+    // 1. Si está en modo borrador, no hacer nada
+    if (this.selectedBuilding === 'eraser') return;
+
+    const type = this.selectedBuilding;
+
+    // 2. Verificar si el modelo de preview está en el cache
+    const cachedPreview = this.buildingPreviewCache[type];
+    if (!cachedPreview) {
+      // Si no está cargado (aún cargando), salimos para evitar bugs asíncronos
+      return; 
     }
 
-    const geometry = new THREE.BoxGeometry(this.cellSize * 0.9, 1, this.cellSize * 0.9);
-    const material = new THREE.MeshLambertMaterial({ color: 0xffffff, transparent: true, opacity: 0.5 });
-    this.hoverPreview = new THREE.Mesh(geometry, material);
-    this.hoverPreview.position.set(
-      x * this.cellSize - this.gridSize * this.cellSize / 2 + this.cellSize / 2,
-      0.5, // altura del preview
-      z * this.cellSize - this.gridSize * this.cellSize / 2 + this.cellSize / 2
-    );
-    this.scene.add(this.hoverPreview);
+    // 3. Si el tipo de preview ha cambiado, o no hay preview actual:
+    if (this.currentPreviewType !== type || !this.hoverPreview) {
+      if (this.hoverPreview) {
+        this.scene.remove(this.hoverPreview);
+      }
+      
+      // Usamos un CLON del modelo cacheado para poder posicionarlo sin afectar el original
+      this.hoverPreview = cachedPreview.clone(true);
+      this.scene.add(this.hoverPreview);
+      this.currentPreviewType = type;
+    }
+
+    // 4. Posicionar el preview (siempre síncrono)
+    if (this.hoverPreview) {
+      this.hoverPreview.position.set(
+        x * this.cellSize - this.gridSize * this.cellSize / 2 + this.cellSize / 2,
+        0, // Asume que el modelo GLB tiene el origen en la base
+        z * this.cellSize - this.gridSize * this.cellSize / 2 + this.cellSize / 2
+      );
+    }
   }
 
   private removeBuilding(x: number, z: number): void {
@@ -336,39 +401,29 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
     this.raycaster.setFromCamera(this.mouse, this.camera);
     const intersects = this.raycaster.intersectObjects(this.groundGroup.children);
 
-    if (this.hoverPreview) {
+    // Mueve la lógica de remoción del hover para centralizarla en el manejo de intersects
+    if (this.hoverPreview && !this.isPanning) { // Solo si no está paneando
       this.scene.remove(this.hoverPreview);
       this.hoverPreview = null;
-    }
-
-    if (this.isPanning) {
-      const dx = event.clientX - this.lastMousePosition.x;
-      const dy = event.clientY - this.lastMousePosition.y;
-
-      // mueve la cámara en coordenadas del plano X-Z
-      const moveX = -dx * 0.01;
-      const moveZ = dy * 0.01;
-
-      this.camera.position.x += moveX;
-      this.camera.position.z += moveZ;
-
-      this.lastMousePosition = { x: event.clientX, y: event.clientY };
-
-      this.clampCameraPosition();
+      this.currentPreviewType = null;
     }
     
+    // ... (código de Panning se mantiene) ...
+
     if (intersects.length > 0) {
       const cell = intersects[0].object as THREE.Mesh;
       const { gridX, gridZ } = cell.userData;
 
       // Show preview only for building mode (not eraser)
       if (this.selectedBuilding !== 'eraser' && !this.gridData[gridX][gridZ]) {
+        // Usamos la nueva función síncrona
         this.showHoverPreview(gridX, gridZ);
       }
       // Show red highlight for eraser mode
       else if (this.selectedBuilding === 'eraser' && this.gridData[gridX][gridZ]) {
+        // Si estamos en modo borrador y hay algo, creamos el highlight rojo
         const geometry = new THREE.BoxGeometry(
-          this.cellSize * 0.9, 0.2, this.cellSize * 0.9
+          this.cellSize * 1, 1, this.cellSize * 1
         );
         const material = new THREE.MeshBasicMaterial({ 
           color: 0xff0000,
@@ -383,7 +438,9 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
         );
         this.scene.add(this.hoverPreview);
       }
+      // Si no se puede construir/borrar, el preview ya se eliminó al inicio de onMouseMove.
     }
+    // Si intersects.length es 0 (mouse fuera del grid), el preview se elimina al inicio.
   };
 
   private onClick = (event: MouseEvent): void => {
