@@ -252,6 +252,9 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
         z * this.cellSize - this.gridSize * this.cellSize / 2 + this.cellSize / 2
       );
 
+      model.userData['gridX'] = x;
+      model.userData['gridZ'] = z;
+
       model.traverse((child) => {
         if (child instanceof THREE.Mesh) {
           child.castShadow = true;
@@ -441,7 +444,7 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
     }
     // Number keys 1-4 to select buildings quickly
     else if (event.key >= '1' && event.key <= '4') {
-      const buildings = ['house', 'tower', 'factory', 'park'];
+      const buildings = ['factory', 'house', 'park', 'tower'];
       this.selectedBuilding = buildings[parseInt(event.key) - 1];
     }
 
