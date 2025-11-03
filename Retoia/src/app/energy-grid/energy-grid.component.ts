@@ -39,7 +39,7 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
   private canvasRef!: ElementRef<HTMLDivElement>;
 
   // ===== ESTADO DEL JUEGO =====
-  money = 1000;
+  money = 5000;
   selectedSource = 'solar';
   isConnecting = false;
   connectionStart: { x: number, z: number } | null = null;
@@ -147,7 +147,7 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
   }
 
   private createGround(): void {
-    const baseColor = new THREE.Color('#8B7355');
+     const baseColor = new THREE.Color('#ace45d')
     
     for (let x = 0; x < this.gridSize; x++) {
       for (let z = 0; z < this.gridSize; z++) {
@@ -232,13 +232,13 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
     this.consumersGroup.add(sprite);
   }
 
-  // ===== CREACIÓN DE FUENTES DE ENERGÍA CON MODELOS GLB =====
+// ===== CREACIÓN DE FUENTES DE ENERGÍA CON MODELOS GLB =====
   
   private createSource3D(type: string, x: number, z: number): void {
     // Mapear tipos de energía a modelos existentes
     let modelUrl = '';
     switch(type) {
-      case 'solar': modelUrl = 'assets/planks-half.glb'; break;  // Parque → Solar
+      case 'solar': modelUrl = 'wall-corner-diagonal.glb'; break;  // Parque → Solar
       case 'wind': modelUrl = 'assets/windmill.glb'; break;   // Torre → Eólica
       case 'hydro': modelUrl = 'assets/watermill.glb'; break;  // Fábrica → Hidro
       case 'battery': modelUrl = 'assets/detail-tank.glb'; break; // Casa → Batería
@@ -262,26 +262,25 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
         const scale = scales[type] || 1.5;
         model.scale.set(scale, scale, scale);
         
+        // ✅ ROTACIONES PERSONALIZADAS POR TIPO
+        if (type === 'wind') {
+          model.rotation.x = Math.PI / 2;  // 90° horizontal
+          // Si necesitas ajustar la altura después de rotar:
+          model.position.y = 2;
+        }
+        
         // Posición centrada en la celda
         model.position.set(
           x * this.cellSize - this.gridSize * this.cellSize / 2 + this.cellSize / 2,
-          0,
+          model.position.y || 0,  // Usa la Y ajustada si existe
           z * this.cellSize - this.gridSize * this.cellSize / 2 + this.cellSize / 2
         );
 
-        // Aplicar color característico de cada fuente de energía
-        const source = this.energySources[type];
+        // Aplicar sombras (colores originales preservados)
         model.traverse((child) => {
           if (child instanceof THREE.Mesh) {
             child.castShadow = true;
             child.receiveShadow = true;
-            
-            // Cambiar el color del material según la fuente de energía
-            if (child.material instanceof THREE.MeshStandardMaterial) {
-              child.material.color = new THREE.Color(source.color);
-              child.material.emissive = new THREE.Color(source.color);
-              child.material.emissiveIntensity = 0.3;
-            }
           }
         });
 
@@ -328,7 +327,6 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
     mesh.userData = { gridX: x, gridZ: z, type };
     this.sourcesGroup.add(mesh);
   }
-
   // ===== LÓGICA DE CONEXIÓN DE RED =====
 
   private getCellKey(x: number, z: number): string {
@@ -623,16 +621,21 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
     window.removeEventListener('contextmenu', this.onRightClick);
   }
 
+private lastMoneyUpdate = 0;
   private animate = (): void => {
     this.animationId = requestAnimationFrame(this.animate);
     
     // Animar aerogeneradores (rotación)
     this.sourcesGroup.children.forEach(child => {
       if (child.userData['type'] === 'wind') {
-        child.rotation.y += 0.03;
+        child.rotation.x += 0.03;
       }
     });
-    
+    const now = Date.now();
+    if (now - this.lastMoneyUpdate > 1000) {  // Cada 1 segundo
+      this.updateStats();
+      this.lastMoneyUpdate = now;
+  }
     this.renderer.render(this.scene, this.camera);
   };
 }
