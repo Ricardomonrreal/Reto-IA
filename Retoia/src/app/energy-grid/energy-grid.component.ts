@@ -73,7 +73,9 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
   private gridData: (string | null)[][] = [];
   private consumers: Consumer[] = [];
   private powerLines: Array<{ from: {x: number, z: number}, to: {x: number, z: number} }> = [];
-
+  private clouds: THREE.Object3D[] = [];
+  private cloudCount = 50;
+  private cloudSpeed = 0.02; // velocidad de movimiento de las nubes
   // ===== ESTADÍSTICAS =====
   totalProduction = 0;
   totalConsumption = 0;
@@ -92,13 +94,24 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
     nuclear: { name: 'Nuclear', icon: '☢️', cost: 2000, production: 500, emissions: 250, color: 0x556B2F, height: 6.0 }
   };
 
+  // ===== ECONOMÍA =====
+  // New: control money changes only in updateEconomy to avoid double charges.
+  private lastEconomyUpdate = 0;
+  private readonly economyInterval = 3000; // ms (every 3 seconds)
+  private readonly moneyChangeRate = 0.01; // multiplier for balance -> money change
+
+  // legacy variable used for periodic updateStats in animate loop (keeps original behavior)
+  private lastStatsUpdate = 0;
+
   ngOnInit(): void {
     this.initGrid();
     this.initScene();
     this.createGround();
+    this.createClouds();
     this.createConsumers();
     this.updateNetworkState();
     this.animate();
+    this.animateClouds();
     this.addEventListeners();
   }
 
@@ -107,6 +120,54 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
     if (this.animationId) cancelAnimationFrame(this.animationId);
     this.renderer?.dispose();
   }
+
+  //Nubes//
+    private createClouds(): void {
+      for (let i = 0; i < this.cloudCount; i++) {
+        const cloud = new THREE.Group(); // cada nube es un grupo de esferas
+  
+        const sphereCount = 5 + Math.floor(Math.random() * 2); // 5-10 esferas por nube
+        for (let j = 0; j < sphereCount; j++) {
+          const radius = 1 + Math.random() * 2; // tamaño de cada “bola” de nube
+          const geometry = new THREE.SphereGeometry(radius, 5, 5);
+          const material = new THREE.MeshLambertMaterial({
+            color: '#FFFFFF',
+            transparent: true,
+            opacity: 0.7,
+          });
+          const sphere = new THREE.Mesh(geometry, material);
+  
+          // posición relativa dentro de la nube
+          sphere.position.set(
+            (Math.random() - 0.5) * 4, 
+            (Math.random() - 0.5) * 2, 
+            (Math.random() - 0.5) * 4
+          );
+  
+          cloud.add(sphere);
+        }
+  
+        // posición inicial aleatoria en la escena
+        cloud.position.set(
+          (Math.random() - 0.5) * this.gridSize * this.cellSize,
+          10 + Math.random() * 10,
+          (Math.random() - 0.5) * this.gridSize * this.cellSize
+        );
+  
+        this.scene.add(cloud);
+        this.clouds.push(cloud);
+      }
+    }
+
+  private animateClouds(): void {
+  this.clouds.forEach(cloud => {
+    cloud.position.x += this.cloudSpeed;
+
+    if (cloud.position.x > this.gridSize * this.cellSize / 2 + 5) {
+      cloud.position.x = -this.gridSize * this.cellSize / 2 - 5; // loop
+    }
+  });
+}
 
   // ===== INICIALIZACIÓN =====
   private initGrid(): void {
@@ -171,36 +232,114 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
     }
   }
 
+  private createFallbackHouse(x: number, z: number): void {
+    const houseGroup = new THREE.Group();
+    
+    // Paredes
+    const wallGeometry = new THREE.BoxGeometry(1.5, 1.5, 1.5);
+    const wallMaterial = new THREE.MeshLambertMaterial({ 
+      color: 0xE0E0E0,
+      emissive: 0xFF0000,
+      emissiveIntensity: 0.2
+    });
+    const walls = new THREE.Mesh(wallGeometry, wallMaterial);
+    walls.position.y = 0.75;
+    walls.castShadow = true;
+    walls.receiveShadow = true;
+    houseGroup.add(walls);
+    
+    // Techo
+    const roofGeometry = new THREE.ConeGeometry(1.2, 1, 4);
+    const roofMaterial = new THREE.MeshLambertMaterial({ color: 0xD2691E });
+    const roof = new THREE.Mesh(roofGeometry, roofMaterial);
+    roof.rotation.y = Math.PI / 4;
+    roof.position.y = 2;
+    roof.castShadow = true;
+    houseGroup.add(roof);
+    
+    houseGroup.position.set(
+      x * this.cellSize - this.gridSize * this.cellSize / 2 + this.cellSize / 2,
+      0,
+      z * this.cellSize - this.gridSize * this.cellSize / 2 + this.cellSize / 2
+    );
+    
+    houseGroup.userData = { type: 'consumer', x, z };
+    this.consumersGroup.add(houseGroup);
+  }
+
   private createConsumers(): void {
-    const positions = [
-      { x: 5, z: 5 }, { x: 24, z: 5 }, { x: 5, z: 24 }, { x: 24, z: 24 },
-      { x: 15, z: 8 }, { x: 8, z: 15 }, { x: 22, z: 15 }, { x: 15, z: 22 }
+    const numConsumers = 25;  // ✅ Cantidad de casas
+    const usedPositions = new Set<string>();  // Para evitar duplicados
+
+    // ✅ Lista de modelos GLB disponibles
+    const houseModels = [
+      'assets/building-type-q.glb',
+      'assets/building-type-s.glb',
+      'assets/building-type-m.glb',
+      'assets/building-type-f.glb'
     ];
 
-    positions.forEach(pos => {
+    // ✅ GENERAR POSICIONES ALEATORIAS
+    for (let i = 0; i < numConsumers; i++) {
+      let x: number, z: number, posKey: string;
+      
+      // Buscar posición única
+      do {
+        x = Math.floor(Math.random() * (this.gridSize - 4)) + 2;
+        z = Math.floor(Math.random() * (this.gridSize - 4)) + 2;
+        posKey = `${x},${z}`;
+      } while (usedPositions.has(posKey) || this.gridData[x][z] !== null);
+      
+      usedPositions.add(posKey);
+      
+      // Demanda aleatoria entre 40 y 100 kW
       const demand = 40 + Math.floor(Math.random() * 60);
-      this.consumers.push({ x: pos.x, z: pos.z, demand, connected: false });
+      this.consumers.push({ x, z, demand, connected: false });
       
-      const geometry = new THREE.BoxGeometry(1.5, 2, 1.5);
-      const material = new THREE.MeshLambertMaterial({ 
-        color: 0xFF6B6B,
-        emissive: 0xFF0000,
-        emissiveIntensity: 0.2
-      });
-      const house = new THREE.Mesh(geometry, material);
-      
-      house.position.set(
-        pos.x * this.cellSize - this.gridSize * this.cellSize / 2 + this.cellSize / 2,
-        1,
-        pos.z * this.cellSize - this.gridSize * this.cellSize / 2 + this.cellSize / 2
-      );
-      
-      house.castShadow = true;
-      house.userData = { type: 'consumer', x: pos.x, z: pos.z };
-      this.consumersGroup.add(house);
+      // ✅ Seleccionar modelo aleatorio
+      const randomModel = houseModels[Math.floor(Math.random() * houseModels.length)];
 
-      this.createLabel(pos.x, pos.z, `${demand}kW`, 0xFFD700);
-    });
+      // ✅ CARGAR MODELO GLB DE CASA
+      this.gltfLoader.load(
+        randomModel,
+        (gltf) => {
+          const house = gltf.scene;
+          
+          // Escala de la casa (puedes ajustarla por modelo si quieres)
+          house.scale.set(1.5, 1.5, 1.5);
+          
+          // Posición centrada en la celda
+          house.position.set(
+            x * this.cellSize - this.gridSize * this.cellSize / 2 + this.cellSize / 2,
+            0,
+            z * this.cellSize - this.gridSize * this.cellSize / 2 + this.cellSize / 2
+          );
+
+          // Activar sombras y color inicial
+          house.traverse((child) => {
+            if (child instanceof THREE.Mesh) {
+              child.castShadow = true;
+              child.receiveShadow = true;
+              
+              if (child.material instanceof THREE.MeshStandardMaterial) {
+                child.material.emissiveIntensity = 0.2;
+              }
+            }
+          });
+
+          house.userData = { type: 'consumer', x, z };
+          this.consumersGroup.add(house);
+        },
+        undefined,
+        (error) => {
+          console.error('Error cargando modelo de casa:', randomModel, error);
+          this.createFallbackHouse(x, z);
+        }
+      );
+
+      // Etiqueta con demanda
+      this.createLabel(x, z, `${demand}kW`, 0xFFD700);
+    }
 
     this.updateStats();
   }
@@ -232,8 +371,8 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
     this.consumersGroup.add(sprite);
   }
 
-// ===== CREACIÓN DE FUENTES DE ENERGÍA CON MODELOS GLB =====
-  
+  // ===== CREACIÓN DE FUENTES DE ENERGÍA CON MODELOS GLB =====
+    
   private createSource3D(type: string, x: number, z: number): void {
     // Mapear tipos de energía a modelos existentes
     let modelUrl = '';
@@ -364,7 +503,7 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
     );
     
     const geometry = new THREE.BufferGeometry().setFromPoints([pos1, pos2]);
-    const material = new THREE.LineBasicMaterial({ color: 0xFFFF00, linewidth: 3 });
+    const material = new THREE.LineBasicMaterial({ color: 0x000000, linewidth: 3 });
     const line = new THREE.Line(geometry, material);
     line.userData = { isPowerLine: true, from: {x: x1, z: z1}, to: {x: x2, z: z2} };
     this.linesGroup.add(line);
@@ -398,6 +537,7 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
       }
     });
 
+    // NOTE: updateStats called here to recalc totals, but money adjustments removed from updateStats
     this.updateStats();
   }
 
@@ -422,14 +562,27 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
       .filter(c => c.connected)
       .reduce((sum, c) => sum + c.demand, 0);
 
-    // Ajustar dinero según el balance energético
+    // IMPORTANT: Money changes removed from here to avoid double charging.
+    // All economy/money updates are handled in updateEconomy() called periodically in animate().
+  }
+
+  // ===== ECONOMÍA: actualización controlada y lenta =====
+  private updateEconomy(): void {
+    const now = Date.now();
+    if (now - this.lastEconomyUpdate < this.economyInterval) return;
+    this.lastEconomyUpdate = now;
+
     const balance = this.energyBalance;
+
     if (balance < 0) {
       const deficit = Math.abs(balance);
-      this.money -= deficit * 0.1;
-      this.money = Math.max(0, this.money);
+      // Decremento lento: deficit * rate
+      this.money -= deficit * this.moneyChangeRate;
+      this.money = Math.max(0, Math.round(this.money * 100) / 100); // keep 2 decimals
     } else if (balance > 0) {
-      this.money += balance * 0.05;
+      // Incremento lento: balance * rate
+      this.money += balance * this.moneyChangeRate;
+      this.money = Math.round(this.money * 100) / 100;
     }
   }
 
@@ -449,6 +602,7 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
   // ===== SELECCIÓN Y CONSTRUCCIÓN =====
 
   selectSource(type: string): void {
+    // Ensure selecting a source does NOT charge money.
     if (type === 'cable') {
       this.isConnecting = true;
       this.selectedSource = 'cable';
@@ -468,9 +622,15 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
     if (this.gridData[x][z]) return;
     
     const source = this.energySources[this.selectedSource];
+    if (!source) return;
+
+    // Only charge here, once, when placing.
     if (this.money < source.cost) return;
 
     this.money -= source.cost;
+    // Round money to cents precision
+    this.money = Math.round(this.money * 100) / 100;
+
     this.gridData[x][z] = this.selectedSource;
     
     this.createSource3D(this.selectedSource, x, z);
@@ -556,7 +716,7 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
 
   private showHoverPreview(x: number, z: number): void {
     const source = this.energySources[this.selectedSource];
-    const previewHeight = source.height < 1 ? 1 : source.height;
+    const previewHeight = source ? (source.height < 1 ? 1 : source.height) : 1;
     const geometry = new THREE.BoxGeometry(this.cellSize * 0.9, previewHeight, this.cellSize * 0.9);
     const material = new THREE.MeshLambertMaterial({ color: 0xffffff, transparent: true, opacity: 0.5 });
     
@@ -621,7 +781,7 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
     window.removeEventListener('contextmenu', this.onRightClick);
   }
 
-private lastMoneyUpdate = 0;
+  private lastMoneyUpdate = 0;
   private animate = (): void => {
     this.animationId = requestAnimationFrame(this.animate);
     
@@ -631,11 +791,17 @@ private lastMoneyUpdate = 0;
         child.rotation.x += 0.03;
       }
     });
+
     const now = Date.now();
-    if (now - this.lastMoneyUpdate > 1000) {  // Cada 1 segundo
+    // Update stats periodically (every 1s) to keep totals fresh without heavy cpu use
+    if (now - this.lastStatsUpdate > 1000) {
       this.updateStats();
-      this.lastMoneyUpdate = now;
-  }
+      this.lastStatsUpdate = now;
+    }
+
+    // Update economy at controlled interval to avoid fast money changes or double-charging
+    this.updateEconomy();
+
     this.renderer.render(this.scene, this.camera);
   };
 }
