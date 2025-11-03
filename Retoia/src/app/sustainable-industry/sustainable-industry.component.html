@@ -1,6 +1,6 @@
 <div class="game-container">
     <div #renderCanvas class="canvas-container"></div>
-
+    
     <div class="ui-panel">
         <div class="title">
             PARQUE INDUSTRIAL SOSTENIBLE
@@ -10,104 +10,135 @@
             <div class="stat-row">
                 PRESUPUESTO: <span style="color: #ffff00;">{{ money }}€</span>
             </div>
+            <div class="stat-row" style="font-size: 11px; color: #aaffaa;">
+                Turno: {{ turnCount }} | Ingreso/turno: {{ incomePerTurn }}€
+            </div>
             
             <div class="industry-stats">
                 <div class="stat-row">
-                    <span class="stat-label">
-                        Producción:</span>
+                    <span class="stat-label">Producción:</span>
                     <span class="stat-value production">{{ totalProduction }} Unidades</span>
+                    <span style="font-size: 10px; color: #88ff88;" *ngIf="productionMultiplier > 1">
+                        (x{{ productionMultiplier.toFixed(2) }})
+                    </span>
                 </div>
                 <div class="stat-row">
-                    <span class="stat-label">
-                        Residuos:</span>
+                    <span class="stat-label">Residuos:</span>
                     <span class="stat-value waste">{{ totalWaste }} kg/h</span>
+                    <span style="font-size: 10px; color: #88ff88;" *ngIf="wasteReductionBonus > 0">
+                        (-{{ wasteReductionBonus }})
+                    </span>
                 </div>
                 <div class="stat-row">
-                    <span class="stat-label">
-                        Innovación:</span>
+                    <span class="stat-label">🔬 Innovación:</span>
                     <span class="stat-value innovation">{{ innovationIndex }}%</span>
                 </div>
+                <div class="stat-row">
+                    <span class="stat-label">🛡️ Resiliencia:</span>
+                    <span class="stat-value" [style.color]="resilienceIndex > 50 ? '#00ff00' : '#ffaa00'">
+                        {{ resilienceIndex }}%
+                    </span>
+                </div>
             </div>
         </div>
 
-        <div class="subtitle">EDIFICIOS Y TECNOLOGÍAS: </div>
+        <div class="subtitle">EDIFICIOS Y TECNOLOGÍAS:</div>
         
-        @for (building of industrialBuildingsUI | keyvalue; track building.key) {
-      <button
-        class="building-btn"
-        [class.selected]="selectedBuilding === building.key"
-        [disabled]="money < building.value.cost && selectedBuilding !== building.key"
-        (click)="selectBuilding(building.key)">
-        <span>{{ building.value.icon }} {{ building.value.name }}</span>
-        <div class="building-info">
-            Costo: {{ building.value.cost }}€ | Producción: {{ building.value.production }} Unidades
-        </div>
-      </button>
-    }
-
         <button
-            class="building-btn logistics-btn"
-            [class.selected]="selectedBuilding === 'logistics'"
-            (click)="selectBuilding('logistics')">
-            <span> CONEXIÓN LOGÍSTICA</span>
+            class="building-btn eraser-btn"
+            [class.selected]="selectedBuilding === 'eraser'"
+            (click)="selectBuilding('eraser')">
+            <span>🗑️ BORRADOR</span>
             <div class="building-info">
-                Conecta edificios para optimizar flujo
+                Devuelve 50% del costo (Tecla Del)
             </div>
         </button>
+        
+        @for (building of industrialBuildingsUI | keyvalue; track building.key) {
+            <button
+                class="building-btn"
+                [class.selected]="selectedBuilding === building.key"
+                [disabled]="money < building.value.cost && selectedBuilding !== building.key"
+                (click)="selectBuilding(building.key)">
+                <span>{{ building.value.icon }} {{ building.value.name }}</span>
+                <div class="building-info" style="font-size: 10px;">
+                    💰 {{ building.value.cost }}€ | 📦 {{ building.value.production }} Unid
+                    <br>
+                    🔬 +{{ building.value.innovationBonus }}% | 🛡️ +{{ building.value.resilienceBonus }}%
+                    <br>
+                    🔧 Mantenimiento: {{ building.value.maintenanceCost }}€/turno
+                </div>
+            </button>
+        }
 
         <div class="instructions-bottom">
-            <div style="color: #ffff00; margin-bottom: 5px;"> OBJETIVO:</div>
-            <div> Alcanzar producción objetivo</div>
-            <div> Reducir residuos industriales</div>
-            <div> Fomentar innovación local</div>
+            <div style="color: #ffff00; margin-bottom: 5px;">🎯 OBJETIVOS ODS 9:</div>
+            <div style="font-size: 11px;">
+                <div>✓ Infraestructura resiliente (>50%)</div>
+                <div>✓ Industrialización sostenible</div>
+                <div>✓ Fomentar innovación (>50%)</div>
+            </div>
             
-            <div style="margin-top: 8px; border-top: 1px solid #00ff00; padding-top: 8px;">
-                <strong>Zonas Rojas:</strong> Concentración de Residuos
+            <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #00ff00;">
+                <strong style="color: #ffaa00;">💡 MECÁNICAS:</strong>
+                <div style="font-size: 10px; margin-top: 4px;">
+                    • Cada 10s = 1 turno automático
+                    • Innovación aumenta producción
+                    • Resiliencia genera bonos
+                    • Edificios cercanos = sinergia
+                    • Exceso de residuos = penalización
+                </div>
             </div>
         </div>
     </div>
 
     <div class="instructions-panel">
-        <div class="instructions-title"> CONTROLES</div>
+        <div class="instructions-title">CONTROLES</div>
         <div>
-            <span style="color: #ffff00;">Click</span>: Colocar Edificio
+            <span style="color: #ffff00;">Click Izquierdo</span>: Colocar Edificio
         </div>
         <div>
-            <span style="color: #ffff00;">Modo Logística</span>: Click en 2 puntos para conectar
+            <span style="color: #ffff00;">Click Derecho</span>: Borrar Rápido
         </div>
         <div>
-            <span style="color: #ffff00;">Mouse Wheel</span>: Zoom
+            <span style="color: #ffff00;">Mouse Wheel</span>: Zoom (Acercar/Alejar)
         </div>
         <div>
-            <span style="color: #ffff00;">Click Medio/Der</span>: Mover cámara
+            <span style="color: #ffff00;">Click Medio/Der</span>: Mover Cámara (Panear)
+        </div>
+        <div>
+            <span style="color: #ffff00;">Teclas W/A/S/D</span>: Mover Cámara
+        </div>
+        <div>
+            <span style="color: #ffff00;">Tecla Del</span>: Modo Borrador
         </div>
 
         <div style="margin-top: 12px; padding-top: 8px; border-top: 1px solid #00ff00;">
-            <div style="color: #ffffee; font-weight: bold; margin-bottom: 5px;"> GUÍA RÁPIDA: </div>
-            <div style="font-size: 11px;">
-                <div><strong>Fábrica Limpia:</strong> Producción con pocos residuos</div>
-                <div><strong>Centro I+D:</strong> Aumenta el índice de Innovación</div>
-                <div><strong>Planta de Reciclaje:</strong> Gestiona residuos industriales</div>
-                <div><strong>Almacén:</strong> Optimiza el flujo de materiales</div>
+            <div style="color: #ffffee; font-weight: bold; margin-bottom: 5px;">📋 EDIFICIOS:</div>
+            <div style="font-size: 10px;">
+                <div><strong>🏭 Fábrica Limpia:</strong> Producción eficiente</div>
+                <div><strong>🔬 Centro I+D:</strong> +Innovación (cerca de fábricas)</div>
+                <div><strong>♻️ Reciclaje:</strong> Reduce residuos (cerca de todo)</div>
+                <div><strong>📦 Almacén:</strong> +Resiliencia, bajo costo</div>
+                <div><strong>☀️ Panel Solar:</strong> Energía limpia</div>
+                <div><strong>🌐 Hub Inteligente:</strong> Max innovación</div>
             </div>
         </div>
     </div>
 
     <div class="action-indicator"
-    [class.eraser-mode]="(selectedBuilding ?? '') === 'eraser'"
-    [class.logistics-mode]="(selectedBuilding ?? '') === 'logistics'">
+        [class.eraser-mode]="(selectedBuilding ?? '') === 'eraser'">
     
-    <span *ngIf="(selectedBuilding ?? '') === 'eraser'"> MODO BORRADOR</span>
+        <span *ngIf="(selectedBuilding ?? '') === 'eraser'">MODO BORRADOR</span>
 
-    <span *ngIf="(selectedBuilding ?? '') === 'logistics'">
-        MODO LOGÍSTICA - Click para conectar
-    </span>
-
-    <span *ngIf="(selectedBuilding ?? '') !== 'eraser' && (selectedBuilding ?? '') !== 'logistics'">
-        COLOCANDO: {{ industrialBuildingsUI[selectedBuilding ?? '']?.name || 'NADA' }}
-    </span>
-</div>
-
+        <span *ngIf="selectedBuilding && selectedBuilding !== 'eraser'">
+            COLOCANDO: {{ industrialBuildingsUI[selectedBuilding]?.name || 'NADA' }}
+        </span>
+        
+        <span *ngIf="!selectedBuilding">
+            MODO SELECCIÓN: Ninguno
+        </span>
+    </div>
 
     <div class="alert-panel"
         [class.alert-success]="totalWaste <= maxWasteTarget"
@@ -127,4 +158,17 @@
             </div>
         </div>
     </div>
+    <!-- Notificación de Logros ODS -->
+<div class="achievement-notification" *ngIf="showAchievementNotification">
+    <div class="achievement-content">
+        <div class="achievement-header">
+            <span class="achievement-icon">🎯</span>
+            <h3>{{ achievementTitle }}</h3>
+        </div>
+        <p class="achievement-text">{{ achievementMessage }}</p>
+        <div class="achievement-footer">
+            <strong>ODS 9:</strong> Industria, Innovación e Infraestructura
+        </div>
+    </div>
+</div>
 </div>
