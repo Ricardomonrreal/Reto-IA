@@ -1,3 +1,17 @@
+@font-face {
+  font-family: "bits";
+  src: url("/assets/fonts/font.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "op";
+  src: url("/assets/fonts/rainyhearts.ttf") format("truetype");
+}
+
+.body {
+    font-family: "bits";
+}
+
 .game-container {
     position: fixed;
     top: 0;
@@ -18,22 +32,28 @@
 }
 
 .ui-panel {
+    font-family: "bits";
     position: absolute;
-    top: 20px;
-    left: 20px;
-    background: rgba(0, 0, 0, 0.8);
-    color: #00ff00;
+    top: 10px;
+    left: 10px;
+    background: #333;
+    color: #e8ffdb;
+    border: #e8ffdb;
+    border-style: solid;
+    border-width: 2px;
     padding: 20px;
-    font-family: 'Courier New', monospace;
     font-size: 16px;
-    border: 3px solid #00ff00;
-    box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
     z-index: 100;
     max-height: 90vh;
     overflow-y: auto;
 }
 
+.ui-panel * {
+    font-family: inherit !important;
+}
+
 .title {
+    font-family: "bits";
     margin-bottom: 15px;
     font-size: 20px;
     text-align: center;
@@ -46,7 +66,7 @@
 .subtitle {
     margin-bottom: 10px;
     font-size: 14px;
-    color: #ffff00;
+    color: #ffff4e;
 }
 
 .building-btn {
@@ -55,10 +75,9 @@
     padding: 10px;
     margin-bottom: 8px;
     background: #333;
-    color: #00ff00;
-    border: 2px solid #00ff00;
+    color: #599cb7;
+    border: 2px solid #599cb7;
     cursor: pointer;
-    font-family: 'Courier New', monospace;
     font-size: 14px;
     font-weight: bold;
     text-align: left;
@@ -70,8 +89,8 @@
 }
 
 .building-btn.selected {
-    background: #00ff00;
-    color: #000;
+    background: #599cb7;
+    color: #e8ffdb;
 }
 
 .eraser-btn {

@@ -19,6 +19,11 @@ interface BuildingUI {
   points: number;
 }
 
+interface GridCell {
+  type: string;
+  isPermanent: boolean;
+}
+
 @Component({
   selector: 'app-city-builder',
   standalone: true,
@@ -68,20 +73,45 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
 
   private readonly gridSize = 50;
   private readonly cellSize = 2;
-  private gridData: (string | null)[][] = [];
+  private gridData: (GridCell | null)[][] = [];
 
   private buildingTypes: { [key: string]: BuildingConfig } = {
     house:  { color: 0, height: 1.5, cost: 10, points: 5, scale: 2},
     tower:  { color: 0, height: 3, cost: 20, points: 15, scale: 2},
     factory:{ color: 0, height: 2, cost: 15, points: 10, scale: 2},
-    park:   { color: 0, height: 0.3, cost: 5, points: 3, scale: 1.5}
+    park:   { color: 0, height: 0.3, cost: 5, points: 3, scale: 1.5},
+    glorieta: { color: 0, height: 2, cost: 0, points: 0, scale: 2}
   };
+
+  private initialBuildings: { type: string, x: number, z: number }[] = [
+    { type: 'house', x: 20, z: 20 },
+    { type: 'tower', x: 25, z: 20 },
+    { type: 'glorieta', x: 20, z: 25 },
+    { type: 'park', x: 25, z: 25 },
+    { type: 'house', x: 30, z: 15 }
+  ];
+
+  private createInitialBuildings(): void {
+    this.initialBuildings.forEach(building => {
+      // Verificar si la celda está vacía antes de construir
+      if (!this.gridData[building.x][building.z]) {
+        this.createBuilding3D(building.type, building.x, building.z);
+        
+        // Es importante registrarlo inmediatamente ya que createBuilding3D es asíncrono
+        this.gridData[building.x][building.z] = {
+          type: building.type,
+          isPermanent: true
+        };
+      }
+    });
+  }
 
   ngOnInit(): void {
     this.initScene();
     this.createGround();
     this.createClouds();
     this.preloadBuildingPreviews();
+    this.createInitialBuildings();
     this.animate();
     this.addEventListeners();
   }
@@ -230,7 +260,7 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
     );
   }
 
-  private createBuilding3D(type: string, x: number, z: number) {
+  private createBuilding3D(type: string, x: number, z: number, updateGrid: boolean = false) {
     const config = this.buildingTypes[type];
 
     let modelUrl = '';
@@ -239,16 +269,19 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
       case 'tower': modelUrl = 'assets/building-b.glb'; break;
       case 'factory': modelUrl = 'assets/building-c.glb'; break;
       case 'park': modelUrl = 'assets/skyscraper-c.glb'; break;
+      case 'glorieta': modelUrl = 'assets/streets/glorieta1.glb'; break;
     }
 
     this.loadBuildingModel(modelUrl, (model) => {
       // Ajuste de escala
       model.scale.set(config.scale, config.scale, config.scale); 
 
+      const groundHeight = 0.5;
+
       // Posición centrada en la celda
       model.position.set(
         x * this.cellSize - this.gridSize * this.cellSize / 2 + this.cellSize / 2,
-        0,
+        groundHeight / 2,
         z * this.cellSize - this.gridSize * this.cellSize / 2 + this.cellSize / 2
       );
 
@@ -261,16 +294,13 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
           child.receiveShadow = true;
 
           if (child.material instanceof THREE.MeshStandardMaterial) {
-            child.material.emissive = new THREE.Color(0xffffff);
+            child.material.emissive = new THREE.Color('#2f00ffff');
             child.material.emissiveIntensity = 0.02; // brillo tenue
           }
         }
       });
 
-      //model.userData.x = x;
-      //model.userData.gridZ = z;
       this.buildingsGroup.add(model);
-      this.gridData[x][z] = type; // mantenemos la referencia
     });
   }
 
@@ -286,6 +316,7 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
         case 'tower': modelUrl = 'assets/building-b.glb'; break;
         case 'factory': modelUrl = 'assets/building-c.glb'; break;
         case 'park': modelUrl = 'assets/skyscraper-c.glb'; break;
+        case 'glorieta': modelUrl = 'assets/streets/glorieta1.glb'; break;
       }
 
       if (modelUrl) {
@@ -357,9 +388,21 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
   }
 
   private removeBuilding(x: number, z: number): void {
-    const buildingType = this.gridData[x][z];
-    if (!buildingType) return;
+    const cellData = this.gridData[x][z];
 
+    // 1. Si no hay nada o el objeto está incompleto, sal
+    if (!cellData) return;
+    
+    // 2. ⬅️ VERIFICACIÓN CLAVE: Si es permanente, ¡detente!
+    if (cellData.isPermanent) {
+      console.log(`Intento de borrar un edificio permanente en (${x}, ${z}).`);
+      return;
+    }
+
+    // Si llegamos aquí, el edificio es mutable (construido por el usuario).
+    
+    const buildingType = cellData.type; // Obtener el tipo de edificio
+    
     // Find and remove the building from the scene
     const buildingToRemove = this.buildingsGroup.children.find(
       (child) => child.userData['gridX'] === x && child.userData['gridZ'] === z
@@ -368,7 +411,7 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
     if (buildingToRemove) {
       this.buildingsGroup.remove(buildingToRemove);
       
-      // Dispose geometry and materials to free memory
+      // Dispose geometry and materials to free memory (esto se mantiene igual)
       if (buildingToRemove instanceof THREE.Mesh) {
         buildingToRemove.geometry.dispose();
         if (Array.isArray(buildingToRemove.material)) {
@@ -384,7 +427,7 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
 
     // Deduct points (half of what was gained)
     const config = this.buildingTypes[buildingType];
-    this.score = Math.max(0, this.score - Math.floor(config.points / 2));
+    this.score = Math.max(0, this.score + Math.floor(config.points));
   }
 
   private clampCameraPosition(): void {
@@ -466,7 +509,12 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
           const config = this.buildingTypes[this.selectedBuilding];
           if (this.score >= config.cost) {
             this.createBuilding3D(this.selectedBuilding, gridX, gridZ);
-            this.gridData[gridX][gridZ] = this.selectedBuilding;
+
+            this.gridData[gridX][gridZ] = {
+              type: this.selectedBuilding,
+              isPermanent: false
+            };
+
             this.score = this.score - config.cost + config.points;
           }
         }
@@ -505,11 +553,11 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
       this.selectedBuilding = buildings[parseInt(event.key) - 1];
     }
 
-    const move = 0.5;
-    if (event.key === 'w') this.camera.position.z -= move;
-    if (event.key === 's') this.camera.position.z += move;
-    if (event.key === 'a') this.camera.position.x -= move;
-    if (event.key === 'd') this.camera.position.x += move;
+    const move = 0.6;
+    if (event.key === 's') this.camera.position.z -= move;
+    if (event.key === 'w') this.camera.position.z += move;
+    if (event.key === 'd') this.camera.position.x -= move;
+    if (event.key === 'a') this.camera.position.x += move;
     this.clampCameraPosition();
   };
 
