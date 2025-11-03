@@ -1,0 +1,109 @@
+/* === Fondo general === */
+.main-screen {
+  background-image: url('https://as1.ftcdn.net/jpg/04/49/03/76/1000_F_449037628_15r3avzP4JTQUdKb3SBCXAQZac8ISNK1.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  min-height: 100vh;
+  width: 100vw;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  font-family: 'Pixelify Sans', monospace;
+  color: #eaffea;
+  position: relative;
+  overflow: hidden;
+}
+
+/* === Logo superior centrado === */
+header {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+}
+
+.logo {
+  width: 260px;
+  height: auto;
+  filter: drop-shadow(0 0 6px rgba(0, 0, 0, 0.7));
+}
+
+/* === Título ECOPLAN === */
+.title {
+  font-size: 7.5em;
+  color: #eaffea;
+  text-shadow: 0 0 10px rgba(0, 0, 0, 0.8), 6px 6px 0 #264d22;
+  letter-spacing: 5px;
+  margin-bottom: 40px;
+  text-align: center;
+}
+
+/* === Contenedor central === */
+.menu-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* === Botones del menú === */
+.menu-options {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.menu-button {
+  background-color: #204d27;
+  color: white;
+  font-size: 2em;
+  padding: 15px 40px;
+  border: 4px solid #0e2914;
+  cursor: pointer;
+  box-shadow: 6px 6px 0 #0e2914;
+  transition: transform 0.1s, box-shadow 0.1s, background-color 0.2s;
+  width: 320px;
+  text-align: center;
+  text-transform: uppercase;
+  border-radius: 4px;
+}
+
+.menu-button:hover {
+  background-color: #3b8a4a;
+}
+
+.menu-button:active {
+  transform: translate(4px, 4px);
+  box-shadow: 3px 3px 0 #0e2914;
+}
+
+/* === Texto inferior centrado === */
+.watermark {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 1.2em;
+  color: rgba(255, 255, 255, 0.8);
+  text-align: center;
+}
+
+/* === Responsividad (para móvil) === */
+@media (max-width: 768px) {
+  .title {
+    font-size: 3.5em;
+  }
+  .menu-button {
+    width: 250px;
+    font-size: 1.5em;
+  }
+  .logo {
+    width: 180px;
+  }
+}

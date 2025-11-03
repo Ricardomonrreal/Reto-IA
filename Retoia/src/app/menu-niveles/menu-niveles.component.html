@@ -1,0 +1,29 @@
+<div class="niveles-container">
+  <h1>Selecciona un Nivel</h1>
+
+  <div class="niveles-grid">
+    <div 
+      class="nivel-card"
+      *ngFor="let nivel of niveles"
+      (click)="irANivel(nivel.ruta)"
+    >
+      <div class="nivel-header">
+        <span class="nivel-id">Nivel {{ nivel.id }}</span>
+      </div>
+
+      <h2 class="titulo-nivel">{{ nivel.titulo }}</h2>
+      <p class="objetivo-nivel">{{ nivel.objetivo }}</p>
+
+      <div class="boton-jugar">JUGAR</div>
+    </div>
+  </div>
+
+  <div class="volver-container">
+    <button 
+      class="boton-volver"
+      (click)="router.navigate([''])"
+    >
+      ⬅ Volver al Menú Principal
+    </button>
+  </div>
+</div>

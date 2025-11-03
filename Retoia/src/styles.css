@@ -1,1 +1,13 @@
 /* You can add global styles to this file, and also import other style files */
+/* src/styles.css */
+
+/* Oculta los enlaces de depuración de Angular CLI */
+.ng-sidebar-menu,
+.ng-sidebar-menu-toggle {
+    display: none !important;
+}
+
+/* Si el código anterior no funciona, intenta esto: */
+nav { 
+    display: none !important; 
+}
