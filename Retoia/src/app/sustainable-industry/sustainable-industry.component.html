@@ -132,7 +132,7 @@
         <span *ngIf="(selectedBuilding ?? '') === 'eraser'">MODO BORRADOR</span>
 
         <span *ngIf="selectedBuilding && selectedBuilding !== 'eraser'">
-            COLOCANDO: {{ industrialBuildingsUI[selectedBuilding]?.name || 'NADA' }}
+            COLOCANDO: {{ industrialBuildingsUI[selectedBuilding].name || 'NADA' }}
         </span>
         
         <span *ngIf="!selectedBuilding">

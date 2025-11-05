@@ -3,41 +3,94 @@
         <div #renderCanvas class="canvas-container"></div>
 
     <!-- UI Overlay -->
-    <div class="ui-panel">
-        <div class="title">🏙️ CONSTRUCTOR DE CIUDAD</div>
-        <div class="score">💰 PUNTOS: {{ score }}</div>
-        <div class="subtitle">SELECCIONA HERRAMIENTA:</div>
+    <div class="ui-panel"
+        (click)=$event.stopPropagation()>
+        <div class="title">CIUDADES Y COMUNIDADES SOSTENIBLES ODS 11</div>
+        <div class="subtitle">SELECCIONA CATEGORÍA:</div>
 
-        <!-- Eraser button -->
+        <!-- ⬅️ NAVEGACIÓN DE CATEGORÍAS -->
+        <div class="category-nav">
+            <button 
+                *ngFor="let category of ['Edificios', 'Casas', 'Calles', 'Decoración']"
+                (click)="selectCategory($any(category))"
+                [class.selected-tab]="selectedCategory === category"
+                class="category-btn"
+            >
+                {{ category }}
+            </button>
+        </div>
+        <!-- ------------------------------ -->
+
+        <div class="subtitle current-category">
+            Elementos de {{ selectedCategory }}
+        </div>
+        
+        <!-- Botón Borrador (Vertical, siempre visible) -->
         <button
         (click)="selectBuilding('eraser')"
         [class.selected]="selectedBuilding === 'eraser'"
-        class="building-btn eraser-btn"
+        class="eraser-btn"
         >
-        🗑️ BORRADOR<br/>
-        <span class="building-info">
-        Elimina edificios (Del/Supr)
-        </span>
+            🗑️ BORRADOR<br/>
+            <span class="building-info">
+            Elimina (Del/Supr)
+            </span>
         </button>
 
-        <!-- Building buttons -->
-        <button
-        *ngFor="let building of buildingUIData | keyvalue"
-        (click)="selectBuilding(building.key)"
-        [class.selected]="selectedBuilding === building.key"
-        class="building-btn"
-        >
-        {{ building.value.icon }} {{ building.value.name }}<br/>
-        <span class="building-info">
-        💵 -{{ building.value.cost }} | ⭐ +{{ building.value.points }}
-        </span>
-        </button>
+        <!-- Contenedor de la lista de edificios (Scroll horizontal) -->
+        <div class="building-list-container">
+            <!-- ⬅️ FILTRADO CONDICIONAL DE BOTONES -->
+            <ng-container *ngFor="let buildingKey of buildingCategories[selectedCategory]">
+                <!-- Usamos 'let building' para obtener los datos de buildingUIData -->
+                <ng-container *ngIf="buildingUIData[buildingKey] as building">
+                    <button
+                        (click)="selectBuilding(buildingKey)"
+                        [class.selected]="selectedBuilding === buildingKey"
+                        class="building-btn"
+                    >
+                        <img [src]="building.thumb" 
+                            alt="{{ building.name }}" 
+                            class="building-thumbnail"> 
+                        
+                        <span class="building-name">{{ building.name }}</span>
+                    </button>
+                </ng-container>
+            </ng-container>
+        </div>
 
         <div class="instructions-bottom">
-        <strong>Clic izquierdo:</strong> Construir/Borrar<br/>
-        <strong>Clic derecho:</strong> Borrar rápido<br/>
-        <strong>Tecla Del:</strong> Modo borrador
+            <strong>Clic izquierdo:</strong> Construir/Borrar<br/>
+            <strong>Clic derecho:</strong> Borrar rápido<br/>
+            <strong>Tecla R:</strong> Rotar edificio
         </div>
     </div>
+            <div class="stats-panel">
+            <h3>📊 Estadísticas de la Ciudad</h3>
+            <p>
+                <strong>Habitantes:</strong> {{ totalInhabitants }}
+            </p>
+            <p>
+                <strong>Área Verde Total:</strong> 
+                {{ totalGreenAreaM2.toFixed(1) }} m²
+            </p>
+            <p>
+                <strong>Área Verde Necesaria:</strong> 
+                {{ requiredGreenAreaM2.toFixed(1) }} m² (9m²/hab)
+            </p>
+            
+            <hr>
+            
+            <p [ngClass]="{'deficit-alert': greenAreaDeficit < 0, 'surplus-ok': greenAreaDeficit >= 0}">
+                <strong>Déficit/Superávit:</strong> 
+                {{ greenAreaDeficit.toFixed(1) }} m²
+            </p>
+
+            <div *ngIf="greenAreaDeficit < 0" class="validation-message alert">
+                ⚠️ ¡NECESITAS MÁS ESPACIOS VERDES!
+            </div>
+            <div *ngIf="greenAreaDeficit >= 0" class="validation-message ok">
+                ✅ Área Verde Suficiente.
+            </div>
+        </div>
     </div>
 </body>

@@ -107,7 +107,7 @@
     <span *ngIf="selectedSource === 'eraser'">🗑️ MODO BORRADOR</span>
     <span *ngIf="selectedSource === 'cable'">🔌 MODO CONEXIÓN - Click en 2 fuentes</span>
     <span *ngIf="selectedSource !== 'eraser' && selectedSource !== 'cable'">
-      ⚡ COLOCANDO: {{ energySourcesUI[selectedSource]?.name || 'NADA' }}
+      ⚡ COLOCANDO: {{ energySourcesUI[selectedSource].name || 'NADA' }}
     </span>
   </div>
 
