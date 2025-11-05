@@ -19,8 +19,25 @@
     </div>
   </div>
 
-<footer class="watermark">
-  Desarrollado por EcoCybers © 2025
-</footer>
+  <footer class="watermark">
+    Desarrollado por EcoCybers © 2025
+  </footer>
 
+  <!-- 🟢 Modal: Cómo jugar -->
+  <div class="modal" *ngIf="mostrarComoJugar">
+    <div class="modal-content animar-aparicion">
+      <h2>¿Cómo jugar?</h2>
+      <pre class="texto-escritura">{{ textoComoJugar }}</pre>
+      <button class="cerrar" (click)="cerrarComoJugar()">Cerrar</button>
+    </div>
+  </div>
+
+  <!-- 🟣 Modal: Créditos -->
+  <div class="modal" *ngIf="mostrarCreditos">
+    <div class="modal-content animar-aparicion">
+      <h2>Créditos</h2>
+      <pre class="texto-escritura">{{ textoCreditos }}</pre>
+      <button class="cerrar" (click)="cerrarCreditos()">Cerrar</button>
+    </div>
+  </div>
 </div>
