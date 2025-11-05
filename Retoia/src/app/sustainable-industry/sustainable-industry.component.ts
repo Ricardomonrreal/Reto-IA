@@ -112,12 +112,12 @@ export class SustainableIndustryComponent implements OnInit, OnDestroy {
 
   // Mapeo de modelos 3D
   private industrialBuildingModels: { [key: string]: string } = {
-    cleanFactory: 'assets/building-a.glb',
-    researchCenter: 'assets/building-b.glb',
-    recyclingPlant: 'assets/building-c.glb',
-    warehouse: 'assets/skyscraper-c.glb',
-    solarPanel: 'assets/building-a.glb',
-    smartHub: 'assets/building-b.glb'
+    cleanFactory: 'assets/tercera/building-a.glb',
+    researchCenter: 'assets/tercera/building-b.glb',
+    recyclingPlant: 'assets/tercera/building-c.glb',
+    warehouse: 'assets/tercera/skyscraper-c.glb',
+    solarPanel: 'assets/tercera/building-a.glb',
+    smartHub: 'assets/tercera/building-b.glb'
   };
 
   private buildingScaleConfig: { [key: string]: { scale: number } } = {

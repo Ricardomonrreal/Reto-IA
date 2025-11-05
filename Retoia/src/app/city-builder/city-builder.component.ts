@@ -3,7 +3,6 @@ import { Component, OnInit, OnDestroy, ElementRef, ViewChild, model } from '@ang
 import { CommonModule } from '@angular/common';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { animationFrameScheduler } from 'rxjs';
 
 interface BuildingConfig {
   color: number;
@@ -55,12 +54,10 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
       'casaA', 'casaB', 'casaC', 'casaD', 'casaE', 'casaF', 'casaG', 'casaH', 'casaI'
     ],
     'Calles': [
-      'streetA', 'streetB', 'streetC', 'streetD', 'streetE', 'streetF', 'streetG',
-      'lightA', 'lightB', 'lightC', 'banqueta'
+      'streetA', 'streetB', 'streetC', 'streetE', 'streetF', 'streetG', 'banqueta'
     ],
     'Decoración': [
-      'planter', 'arbolA', 'arbolB', 'arbolC', 'arbolD', 'arbolE', 'banca', 'bardaA',
-      'bardaB'
+      'planter', 'arbolA', 'arbolC', 'arbolE', 'banca'
     ]
   };
 
@@ -106,15 +103,10 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
     casaI: { thumb: 'assets/thumbs/casa-i.png', name: 'Casa I'},
 
     //decoracion
-    planter: { thumb: 'assets/thumbs/planter.png', name: 'Planter'},
+    planter: { thumb: 'assets/thumbs/planter.png', name: 'Jardinera'},
     arbolA: { thumb: 'assets/thumbs/arbolA.png', name: 'Árbol A' },
-    arbolB: { thumb: 'assets/thumbs/arbolB.png', name: 'Árbol B' },
-    arbolC: { thumb: 'assets/thumbs/arbolC.png', name: 'Árbol C' },
-    arbolD: { thumb: 'assets/thumbs/arbolD.png', name: 'Árbol D' },
-    arbolE: { thumb: 'assets/thumbs/arbolE.png', name: 'Árbol E' },
-    banca: { thumb: 'assets/thumbs/banca.png', name: 'Banca'},
-    bardaA: { thumb: 'assets/thumbs/bardaA.png', name: 'Barda A'},
-    bardaB: { thumb: 'assets/thumbs/bardaB.png', name: 'Barda B'}
+    arbolC: { thumb: 'assets/thumbs/arbolC.png', name: 'Árbol B' },
+    arbolE: { thumb: 'assets/thumbs/arbolE.png', name: 'Árbol C' }
   };
 
   private gltfLoader = new GLTFLoader();
@@ -1231,7 +1223,7 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
       -d * aspect, d * aspect, d, -d, 1, 1000
     );
 
-    this.camera.zoom = 0.7;
+    this.camera.zoom = 0.5;
     this.camera.updateProjectionMatrix();
     this.camera.position.set(-20, 20, -20);
     this.camera.lookAt(1, 0, 1);
@@ -1847,7 +1839,7 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
     // Aplicamos zoom progresivo (suave)
     this.camera.zoom = THREE.MathUtils.clamp(
       this.camera.zoom + zoomDelta,
-      0.5,   // 🔽 mínimo (más lejos)
+      0.4,   // 🔽 mínimo (más lejos)
       4.0    // 🔼 máximo (más cerca)
     );
 
