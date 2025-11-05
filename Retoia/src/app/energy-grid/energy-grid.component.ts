@@ -75,7 +75,8 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
   private powerLines: Array<{ from: {x: number, z: number}, to: {x: number, z: number} }> = [];
   private clouds: THREE.Object3D[] = [];
   private cloudCount = 50;
-  private cloudSpeed = 0.02; // velocidad de movimiento de las nubes
+  private cloudSpeed = 0.02;
+
   // ===== ESTADÍSTICAS =====
   totalProduction = 0;
   totalConsumption = 0;
@@ -95,12 +96,9 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
   };
 
   // ===== ECONOMÍA =====
-  // New: control money changes only in updateEconomy to avoid double charges.
   private lastEconomyUpdate = 0;
-  private readonly economyInterval = 3000; // ms (every 3 seconds)
-  private readonly moneyChangeRate = 0.01; // multiplier for balance -> money change
-
-  // legacy variable used for periodic updateStats in animate loop (keeps original behavior)
+  private readonly economyInterval = 3000;
+  private readonly moneyChangeRate = 0.01;
   private lastStatsUpdate = 0;
 
   ngOnInit(): void {
@@ -111,7 +109,6 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
     this.createConsumers();
     this.updateNetworkState();
     this.animate();
-    this.animateClouds();
     this.addEventListeners();
   }
 
@@ -121,53 +118,41 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
     this.renderer?.dispose();
   }
 
-  //Nubes//
-    private createClouds(): void {
-      for (let i = 0; i < this.cloudCount; i++) {
-        const cloud = new THREE.Group(); // cada nube es un grupo de esferas
-  
-        const sphereCount = 5 + Math.floor(Math.random() * 2); // 5-10 esferas por nube
-        for (let j = 0; j < sphereCount; j++) {
-          const radius = 1 + Math.random() * 2; // tamaño de cada “bola” de nube
-          const geometry = new THREE.SphereGeometry(radius, 5, 5);
-          const material = new THREE.MeshLambertMaterial({
-            color: '#FFFFFF',
-            transparent: true,
-            opacity: 0.7,
-          });
-          const sphere = new THREE.Mesh(geometry, material);
-  
-          // posición relativa dentro de la nube
-          sphere.position.set(
-            (Math.random() - 0.5) * 4, 
-            (Math.random() - 0.5) * 2, 
-            (Math.random() - 0.5) * 4
-          );
-  
-          cloud.add(sphere);
-        }
-  
-        // posición inicial aleatoria en la escena
-        cloud.position.set(
-          (Math.random() - 0.5) * this.gridSize * this.cellSize,
-          10 + Math.random() * 10,
-          (Math.random() - 0.5) * this.gridSize * this.cellSize
+  // ===== NUBES =====
+  private createClouds(): void {
+    for (let i = 0; i < this.cloudCount; i++) {
+      const cloud = new THREE.Group();
+
+      const sphereCount = 5 + Math.floor(Math.random() * 2);
+      for (let j = 0; j < sphereCount; j++) {
+        const radius = 1 + Math.random() * 2;
+        const geometry = new THREE.SphereGeometry(radius, 5, 5);
+        const material = new THREE.MeshLambertMaterial({
+          color: '#FFFFFF',
+          transparent: true,
+          opacity: 0.7,
+        });
+        const sphere = new THREE.Mesh(geometry, material);
+
+        sphere.position.set(
+          (Math.random() - 0.5) * 4, 
+          (Math.random() - 0.5) * 2, 
+          (Math.random() - 0.5) * 4
         );
-  
-        this.scene.add(cloud);
-        this.clouds.push(cloud);
+
+        cloud.add(sphere);
       }
-    }
 
-  private animateClouds(): void {
-  this.clouds.forEach(cloud => {
-    cloud.position.x += this.cloudSpeed;
+      cloud.position.set(
+        (Math.random() - 0.5) * this.gridSize * this.cellSize,
+        18 + Math.random() * 20,
+        (Math.random() - 0.5) * this.gridSize * this.cellSize
+      );
 
-    if (cloud.position.x > this.gridSize * this.cellSize / 2 + 5) {
-      cloud.position.x = -this.gridSize * this.cellSize / 2 - 5; // loop
+      this.scene.add(cloud);
+      this.clouds.push(cloud);
     }
-  });
-}
+  }
 
   // ===== INICIALIZACIÓN =====
   private initGrid(): void {
@@ -178,28 +163,35 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(0x87CEEB);
 
+    // ✅ CÁMARA ISOMÉTRICA (copiada de city-builder)
     const aspect = window.innerWidth / window.innerHeight;
-    const d = 15;
-    this.camera = new THREE.OrthographicCamera(-d * aspect, d * aspect, d, -d, 1, 1000);
-    this.camera.position.set(-25, 25, -25);
-    this.camera.lookAt(0, 0, 0);
+    const d = 10;
+    this.camera = new THREE.OrthographicCamera(
+      -d * aspect, d * aspect, d, -d, 1, 1000
+    );
 
-    this.renderer = new THREE.WebGLRenderer({ antialias: true });
+    this.camera.zoom = 0.7;
+    this.camera.updateProjectionMatrix();
+    this.camera.position.set(-20, 20, -20);
+    this.camera.lookAt(1, 0, 1);
+
+    this.renderer = new THREE.WebGLRenderer({ antialias: false });
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.renderer.shadowMap.enabled = true;
     this.canvasRef.nativeElement.appendChild(this.renderer.domElement);
 
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+    // Iluminación
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
     this.scene.add(ambientLight);
 
-    const sunLight = new THREE.DirectionalLight(0xffffff, 0.5);
-    sunLight.position.set(20, 30, 20);
-    sunLight.castShadow = true;
-    sunLight.shadow.camera.left = -40;
-    sunLight.shadow.camera.right = 40;
-    sunLight.shadow.camera.top = 40;
-    sunLight.shadow.camera.bottom = -40;
-    this.scene.add(sunLight);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+    directionalLight.position.set(10, 20, 10);
+    directionalLight.castShadow = true;
+    directionalLight.shadow.camera.left = -20;
+    directionalLight.shadow.camera.right = 20;
+    directionalLight.shadow.camera.top = 20;
+    directionalLight.shadow.camera.bottom = -20;
+    this.scene.add(directionalLight);
 
     this.scene.add(this.groundGroup);
     this.scene.add(this.sourcesGroup);
@@ -208,13 +200,13 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
   }
 
   private createGround(): void {
-     const baseColor = new THREE.Color('#ace45d')
+    const baseColor = new THREE.Color('#ace45d')
     
     for (let x = 0; x < this.gridSize; x++) {
       for (let z = 0; z < this.gridSize; z++) {
-        const geometry = new THREE.BoxGeometry(this.cellSize * 0.95, 0.2, this.cellSize * 0.95);
+        const geometry = new THREE.BoxGeometry(this.cellSize * 1, 0.5, this.cellSize * 1);
         const color = baseColor.clone();
-        color.offsetHSL(0, 0, (Math.random() - 0.5) * 0.15);
+        color.offsetHSL(0, 0, (Math.random() - 0.6) * 0.2);
         
         const material = new THREE.MeshLambertMaterial({ color });
         const cell = new THREE.Mesh(geometry, material);
@@ -235,7 +227,6 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
   private createFallbackHouse(x: number, z: number): void {
     const houseGroup = new THREE.Group();
     
-    // Paredes
     const wallGeometry = new THREE.BoxGeometry(1.5, 1.5, 1.5);
     const wallMaterial = new THREE.MeshLambertMaterial({ 
       color: 0xE0E0E0,
@@ -243,23 +234,23 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
       emissiveIntensity: 0.2
     });
     const walls = new THREE.Mesh(wallGeometry, wallMaterial);
-    walls.position.y = 0.75;
+    walls.position.y = 1;
     walls.castShadow = true;
     walls.receiveShadow = true;
     houseGroup.add(walls);
     
-    // Techo
     const roofGeometry = new THREE.ConeGeometry(1.2, 1, 4);
     const roofMaterial = new THREE.MeshLambertMaterial({ color: 0xD2691E });
     const roof = new THREE.Mesh(roofGeometry, roofMaterial);
     roof.rotation.y = Math.PI / 4;
-    roof.position.y = 2;
+    roof.position.y = 2.25;
     roof.castShadow = true;
     houseGroup.add(roof);
     
+    const groundHeight = 0.5;
     houseGroup.position.set(
       x * this.cellSize - this.gridSize * this.cellSize / 2 + this.cellSize / 2,
-      0,
+      groundHeight / 2,
       z * this.cellSize - this.gridSize * this.cellSize / 2 + this.cellSize / 2
     );
     
@@ -268,22 +259,19 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
   }
 
   private createConsumers(): void {
-    const numConsumers = 25;  // ✅ Cantidad de casas
-    const usedPositions = new Set<string>();  // Para evitar duplicados
+    const numConsumers = 25;
+    const usedPositions = new Set<string>();
 
-    // ✅ Lista de modelos GLB disponibles
     const houseModels = [
-      'assets/building-type-q.glb',
-      'assets/building-type-s.glb',
-      'assets/building-type-m.glb',
-      'assets/building-type-f.glb'
+      'assets/energy/texturas/building-type-q.glb',
+      'assets/energy/texturas/building-type-s.glb',
+      'assets/energy/texturas/building-type-m.glb',
+      'assets/energy/texturas/building-type-f.glb'
     ];
 
-    // ✅ GENERAR POSICIONES ALEATORIAS
     for (let i = 0; i < numConsumers; i++) {
       let x: number, z: number, posKey: string;
       
-      // Buscar posición única
       do {
         x = Math.floor(Math.random() * (this.gridSize - 4)) + 2;
         z = Math.floor(Math.random() * (this.gridSize - 4)) + 2;
@@ -292,30 +280,25 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
       
       usedPositions.add(posKey);
       
-      // Demanda aleatoria entre 40 y 100 kW
       const demand = 40 + Math.floor(Math.random() * 60);
       this.consumers.push({ x, z, demand, connected: false });
       
-      // ✅ Seleccionar modelo aleatorio
       const randomModel = houseModels[Math.floor(Math.random() * houseModels.length)];
 
-      // ✅ CARGAR MODELO GLB DE CASA
       this.gltfLoader.load(
         randomModel,
         (gltf) => {
           const house = gltf.scene;
           
-          // Escala de la casa (puedes ajustarla por modelo si quieres)
           house.scale.set(1.5, 1.5, 1.5);
           
-          // Posición centrada en la celda
+          const groundHeight = 0.5;
           house.position.set(
             x * this.cellSize - this.gridSize * this.cellSize / 2 + this.cellSize / 2,
-            0,
+            groundHeight / 2,
             z * this.cellSize - this.gridSize * this.cellSize / 2 + this.cellSize / 2
           );
 
-          // Activar sombras y color inicial
           house.traverse((child) => {
             if (child instanceof THREE.Mesh) {
               child.castShadow = true;
@@ -337,7 +320,6 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
         }
       );
 
-      // Etiqueta con demanda
       this.createLabel(x, z, `${demand}kW`, 0xFFD700);
     }
 
@@ -371,17 +353,14 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
     this.consumersGroup.add(sprite);
   }
 
-  // ===== CREACIÓN DE FUENTES DE ENERGÍA CON MODELOS GLB =====
-    
   private createSource3D(type: string, x: number, z: number): void {
-    // Mapear tipos de energía a modelos existentes
     let modelUrl = '';
     switch(type) {
-      case 'solar': modelUrl = 'wall-corner-diagonal.glb'; break;  // Parque → Solar
-      case 'wind': modelUrl = 'assets/windmill.glb'; break;   // Torre → Eólica
-      case 'hydro': modelUrl = 'assets/watermill.glb'; break;  // Fábrica → Hidro
-      case 'battery': modelUrl = 'assets/detail-tank.glb'; break; // Casa → Batería
-      case 'nuclear': modelUrl = 'assets/chimney-large.glb'; break; // Torre → Nuclear
+      case 'solar': modelUrl = 'wall-corner-diagonal.glb'; break;
+      case 'wind': modelUrl = 'assets/windmill.glb'; break;
+      case 'hydro': modelUrl = 'assets/watermill.glb'; break;
+      case 'battery': modelUrl = 'assets/detail-tank.glb'; break;
+      case 'nuclear': modelUrl = 'assets/chimney-large.glb'; break;
     }
 
     this.gltfLoader.load(
@@ -389,7 +368,6 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
       (gltf) => {
         const model = gltf.scene;
         
-        // Escala ajustada según el tipo
         const scales: { [key: string]: number } = {
           solar: 1.2,
           wind: 2.0,
@@ -401,21 +379,18 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
         const scale = scales[type] || 1.5;
         model.scale.set(scale, scale, scale);
         
-        // ✅ ROTACIONES PERSONALIZADAS POR TIPO
         if (type === 'wind') {
-          model.rotation.x = Math.PI / 2;  // 90° horizontal
-          // Si necesitas ajustar la altura después de rotar:
+          model.rotation.x = Math.PI / 2;
           model.position.y = 2;
         }
         
-        // Posición centrada en la celda
+        const groundHeight = 0.5;
         model.position.set(
           x * this.cellSize - this.gridSize * this.cellSize / 2 + this.cellSize / 2,
-          model.position.y || 0,  // Usa la Y ajustada si existe
+          model.position.y || groundHeight / 2,
           z * this.cellSize - this.gridSize * this.cellSize / 2 + this.cellSize / 2
         );
 
-        // Aplicar sombras (colores originales preservados)
         model.traverse((child) => {
           if (child instanceof THREE.Mesh) {
             child.castShadow = true;
@@ -429,15 +404,11 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
       undefined,
       (error) => {
         console.error(`Error cargando modelo GLB para ${type}:`, error);
-        // Fallback: usar geometría básica si falla la carga
         this.createFallbackSource3D(type, x, z, this.energySources[type]);
       }
     );
   }
 
-  /**
-   * Fallback: Crea geometría básica si no se puede cargar el modelo GLB
-   */
   private createFallbackSource3D(type: string, x: number, z: number, source: EnergySource): void {
     let geometry: THREE.BufferGeometry;
     
@@ -456,9 +427,10 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
     });
     
     const mesh = new THREE.Mesh(geometry, material);
+    const groundHeight = 0.5;
     mesh.position.set(
       x * this.cellSize - this.gridSize * this.cellSize / 2 + this.cellSize / 2,
-      type === 'solar' ? 0.1 : source.height / 2,
+      type === 'solar' ? groundHeight / 2 + 0.1 : source.height / 2 + groundHeight / 2,
       z * this.cellSize - this.gridSize * this.cellSize / 2 + this.cellSize / 2
     );
     
@@ -466,7 +438,6 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
     mesh.userData = { gridX: x, gridZ: z, type };
     this.sourcesGroup.add(mesh);
   }
-  // ===== LÓGICA DE CONEXIÓN DE RED =====
 
   private getCellKey(x: number, z: number): string {
     return `${x},${z}`;
@@ -510,24 +481,20 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
   }
 
   private updateNetworkState(): void {
-    // Resetear todas las conexiones
     this.consumers.forEach(c => c.connected = false);
 
-    // Recopilar todos los nodos conectados por cables
     const connectedNodes: Set<string> = new Set();
     this.powerLines.forEach(line => {
       connectedNodes.add(this.getCellKey(line.from.x, line.from.z));
       connectedNodes.add(this.getCellKey(line.to.x, line.to.z));
     });
 
-    // Marcar consumidores como conectados si tienen cable
     this.consumers.forEach(consumer => {
       if (connectedNodes.has(this.getCellKey(consumer.x, consumer.z))) {
         consumer.connected = true;
       }
     });
 
-    // Actualizar apariencia visual de los consumidores
     this.consumersGroup.children.forEach(mesh => {
       const consumerData = this.consumers.find(c => c.x === mesh.userData['x'] && c.z === mesh.userData['z']);
       if (consumerData && mesh instanceof THREE.Mesh) {
@@ -537,7 +504,6 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
       }
     });
 
-    // NOTE: updateStats called here to recalc totals, but money adjustments removed from updateStats
     this.updateStats();
   }
 
@@ -545,7 +511,6 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
     this.totalProduction = 0;
     this.totalEmissions = 0;
     
-    // Calcular producción total de todas las fuentes
     for (let x = 0; x < this.gridSize; x++) {
       for (let z = 0; z < this.gridSize; z++) {
         const sourceType = this.gridData[x][z];
@@ -557,16 +522,11 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
       }
     }
 
-    // Calcular consumo solo de consumidores conectados
     this.totalConsumption = this.consumers
       .filter(c => c.connected)
       .reduce((sum, c) => sum + c.demand, 0);
-
-    // IMPORTANT: Money changes removed from here to avoid double charging.
-    // All economy/money updates are handled in updateEconomy() called periodically in animate().
   }
 
-  // ===== ECONOMÍA: actualización controlada y lenta =====
   private updateEconomy(): void {
     const now = Date.now();
     if (now - this.lastEconomyUpdate < this.economyInterval) return;
@@ -576,11 +536,9 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
 
     if (balance < 0) {
       const deficit = Math.abs(balance);
-      // Decremento lento: deficit * rate
       this.money -= deficit * this.moneyChangeRate;
-      this.money = Math.max(0, Math.round(this.money * 100) / 100); // keep 2 decimals
+      this.money = Math.max(0, Math.round(this.money * 100) / 100);
     } else if (balance > 0) {
-      // Incremento lento: balance * rate
       this.money += balance * this.moneyChangeRate;
       this.money = Math.round(this.money * 100) / 100;
     }
@@ -599,10 +557,7 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
     return Math.min(100, Math.round((this.totalProduction / this.totalConsumption) * 100));
   }
 
-  // ===== SELECCIÓN Y CONSTRUCCIÓN =====
-
   selectSource(type: string): void {
-    // Ensure selecting a source does NOT charge money.
     if (type === 'cable') {
       this.isConnecting = true;
       this.selectedSource = 'cable';
@@ -624,11 +579,9 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
     const source = this.energySources[this.selectedSource];
     if (!source) return;
 
-    // Only charge here, once, when placing.
     if (this.money < source.cost) return;
 
     this.money -= source.cost;
-    // Round money to cents precision
     this.money = Math.round(this.money * 100) / 100;
 
     this.gridData[x][z] = this.selectedSource;
@@ -647,7 +600,6 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
     if (sourceToRemove) {
       this.sourcesGroup.remove(sourceToRemove);
       
-      // Limpiar memoria
       sourceToRemove.traverse(child => {
         if (child instanceof THREE.Mesh) {
           child.geometry.dispose();
@@ -664,8 +616,14 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
     this.updateNetworkState();
   }
 
-  // ===== EVENTOS =====
+  // ✅ LÍMITES DE CÁMARA (copiado de city-builder)
+  private clampCameraPosition(): void {
+    const halfMap = (this.gridSize * this.cellSize) / 2;
+    this.camera.position.x = THREE.MathUtils.clamp(this.camera.position.x, -halfMap, halfMap);
+    this.camera.position.z = THREE.MathUtils.clamp(this.camera.position.z, -halfMap, halfMap);
+  }
 
+  // ✅ MOUSE MOVE CON PANNING MEJORADO
   private onMouseMove = (event: MouseEvent): void => {
     this.mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     this.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
@@ -675,11 +633,16 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
       this.hoverPreview = null;
     }
 
-    if (this.isPanning) {
-      const dx = event.clientX - this.lastMousePosition.x;
-      const dy = event.clientY - this.lastMousePosition.y;
-      this.camera.position.x += -dx * 0.02;
-      this.camera.position.z += dy * 0.02;
+    // Panning mejorado (copiado de city-builder)
+    if (this.isPanning && (event.buttons & 4 || event.buttons & 2)) {
+      const deltaX = event.clientX - this.lastMousePosition.x;
+      const deltaY = event.clientY - this.lastMousePosition.y;
+
+      const panFactor = 0.005 / this.camera.zoom;
+      this.camera.position.x -= deltaX * panFactor * this.camera.right;
+      this.camera.position.z -= deltaY * panFactor * this.camera.top;
+
+      this.clampCameraPosition();
       this.lastMousePosition = { x: event.clientX, y: event.clientY };
     }
 
@@ -721,9 +684,10 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
     const material = new THREE.MeshLambertMaterial({ color: 0xffffff, transparent: true, opacity: 0.5 });
     
     this.hoverPreview = new THREE.Mesh(geometry, material);
+    const groundHeight = 0.5;
     this.hoverPreview.position.set(
       x * this.cellSize - this.gridSize * this.cellSize / 2 + this.cellSize / 2,
-      previewHeight / 2,
+      previewHeight / 2 + groundHeight / 2,
       z * this.cellSize - this.gridSize * this.cellSize / 2 + this.cellSize / 2
     );
     this.scene.add(this.hoverPreview);
@@ -741,16 +705,44 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
     this.isPanning = false;
   };
 
+  // ✅ ZOOM EXACTO DEL CITY-BUILDER
   private onMouseWheel = (event: WheelEvent): void => {
-    event.preventDefault();
-    const zoomDelta = -event.deltaY * 0.001;
-    this.camera.zoom = THREE.MathUtils.clamp(this.camera.zoom + zoomDelta, 0.5, 3.0);
+    event.preventDefault(); // ⛔ Evitamos zoom del navegador y scrolling
+
+    // Sensibilidad del zoom (ajústalo si lo sientes muy rápido/lento)
+    const zoomStrength = 0.25;
+
+    // event.deltaY > 0 = alejar, < 0 = acercar
+    const zoomDelta = -event.deltaY * zoomStrength * 0.001;
+
+    // Aplicamos zoom progresivo (suave)
+    this.camera.zoom = THREE.MathUtils.clamp(
+      this.camera.zoom + zoomDelta,
+      0.5,   // 🔽 mínimo (más lejos)
+      4.0    // 🔼 máximo (más cerca)
+    );
+
     this.camera.updateProjectionMatrix();
+  };
+
+  // ✅ TECLAS WASD PARA MOVIMIENTO (copiado de city-builder)
+  private onKeyDown = (event: KeyboardEvent): void => {
+    if (event.key === 'Delete' || event.key === 'Backspace') {
+      this.selectedSource = 'eraser';
+    }
+
+    const move = 0.6;
+    if (event.key === 's' || event.key === 'S') this.camera.position.z -= move;
+    if (event.key === 'w' || event.key === 'W') this.camera.position.z += move;
+    if (event.key === 'd' || event.key === 'D') this.camera.position.x -= move;
+    if (event.key === 'a' || event.key === 'A') this.camera.position.x += move;
+    
+    this.clampCameraPosition();
   };
 
   private onWindowResize = (): void => {
     const aspect = window.innerWidth / window.innerHeight;
-    const d = 15;
+    const d = 10;
     this.camera.left = -d * aspect;
     this.camera.right = d * aspect;
     this.camera.updateProjectionMatrix();
@@ -767,6 +759,7 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
     window.addEventListener('mousedown', this.onMouseDown);
     window.addEventListener('mouseup', this.onMouseUp);
     window.addEventListener('wheel', this.onMouseWheel);
+    window.addEventListener('keydown', this.onKeyDown);
     window.addEventListener('resize', this.onWindowResize);
     window.addEventListener('contextmenu', this.onRightClick);
   }
@@ -777,29 +770,36 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
     window.removeEventListener('mousedown', this.onMouseDown);
     window.removeEventListener('mouseup', this.onMouseUp);
     window.removeEventListener('wheel', this.onMouseWheel);
+    window.removeEventListener('keydown', this.onKeyDown);
     window.removeEventListener('resize', this.onWindowResize);
     window.removeEventListener('contextmenu', this.onRightClick);
   }
 
-  private lastMoneyUpdate = 0;
   private animate = (): void => {
     this.animationId = requestAnimationFrame(this.animate);
     
-    // Animar aerogeneradores (rotación)
+    // Animar aerogeneradores
     this.sourcesGroup.children.forEach(child => {
       if (child.userData['type'] === 'wind') {
         child.rotation.x += 0.03;
       }
     });
 
+    // Animar nubes
+    this.clouds.forEach(cloud => {
+      cloud.position.x += this.cloudSpeed;
+
+      if (cloud.position.x > this.gridSize * this.cellSize / 2 + 5) {
+        cloud.position.x = -this.gridSize * this.cellSize / 2 - 5;
+      }
+    });
+
     const now = Date.now();
-    // Update stats periodically (every 1s) to keep totals fresh without heavy cpu use
     if (now - this.lastStatsUpdate > 1000) {
       this.updateStats();
       this.lastStatsUpdate = now;
     }
 
-    // Update economy at controlled interval to avoid fast money changes or double-charging
     this.updateEconomy();
 
     this.renderer.render(this.scene, this.camera);
