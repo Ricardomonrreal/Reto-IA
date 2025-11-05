@@ -361,6 +361,7 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
       case 'hydro': modelUrl = 'assets/watermill.glb'; break;
       case 'battery': modelUrl = 'assets/detail-tank.glb'; break;
       case 'nuclear': modelUrl = 'assets/chimney-large.glb'; break;
+      
     }
 
     this.gltfLoader.load(
