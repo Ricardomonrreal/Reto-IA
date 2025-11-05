@@ -1,14 +1,26 @@
-:host {
+.niveles-container {
     display: block;
-    background-image: url('https://as1.ftcdn.net/jpg/04/49/03/76/1000_F_449037628_15r3avzP4JTQUdKb3SBCXAQZac8ISNK1.jpg');
+    background-image: url('/../assets/Menus.gif');
     background-size: cover;
     background-position: center;
-    min-height: 100vh;
-    padding: 40px 20px;
+    background-repeat: no-repeat;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     font-family: 'Pixelify Sans', monospace;
-    color: #f0f0e0;
-    text-shadow: 2px 2px 0 #000;
+    position: fixed;
+    overflow: hidden;
 }
+  
+
 
 h1 {
     text-align: center;
