@@ -59,7 +59,8 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
       'lightA', 'lightB', 'lightC', 'banqueta'
     ],
     'Decoración': [
-      'planter' 
+      'planter', 'arbolA', 'arbolB', 'arbolC', 'arbolD', 'arbolE', 'banca', 'bardaA',
+      'bardaB'
     ]
   };
 
@@ -103,7 +104,17 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
     casaG: { thumb: 'assets/thumbs/casa-g.png', name: 'Casa G'},
     casaH: { thumb: 'assets/thumbs/casa-h.png', name: 'Casa H'},
     casaI: { thumb: 'assets/thumbs/casa-i.png', name: 'Casa I'},
-    planter: { thumb: 'assets/thumbs/planter.png', name: 'Planter'}
+
+    //decoracion
+    planter: { thumb: 'assets/thumbs/planter.png', name: 'Planter'},
+    arbolA: { thumb: 'assets/thumbs/arbolA.png', name: 'Árbol A' },
+    arbolB: { thumb: 'assets/thumbs/arbolB.png', name: 'Árbol B' },
+    arbolC: { thumb: 'assets/thumbs/arbolC.png', name: 'Árbol C' },
+    arbolD: { thumb: 'assets/thumbs/arbolD.png', name: 'Árbol D' },
+    arbolE: { thumb: 'assets/thumbs/arbolE.png', name: 'Árbol E' },
+    banca: { thumb: 'assets/thumbs/banca.png', name: 'Banca'},
+    bardaA: { thumb: 'assets/thumbs/bardaA.png', name: 'Barda A'},
+    bardaB: { thumb: 'assets/thumbs/bardaB.png', name: 'Barda B'}
   };
 
   private gltfLoader = new GLTFLoader();
@@ -175,10 +186,20 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
     casaG: { color: 0, height: 2, scale: 1.7},
     casaH: { color: 0, height: 2, scale: 1.7},
     casaI: { color: 0, height: 2, scale: 1.7},
-    planter: {color: 0, height: 5, scale: 4, greenAreaM2: 100}
+
+    //Decoracion
+    arbolA: { color: 0, height: 2, scale: 1.3 },
+    arbolB: { color: 0, height: 2, scale: 1.3 },
+    arbolC: { color: 0, height: 2, scale: 1.3 },
+    arbolD: { color: 0, height: 2, scale: 1.3 },
+    arbolE: { color: 0, height: 2, scale: 1.3 },
+    planter: {color: 0, height: 5, scale: 4, greenAreaM2: 100},
+    banca: { color: 0, height: 2, scale: 1.2},
+    bardaA: { color: 0, height: 2, scale: 2},
+    bardaB: { color: 0, height: 2, scale: 1.2}
   };
 
-private initialBuildings: { type: string, x: number, z: number, rotationY?: number }[] = [
+  private initialBuildings: { type: string, x: number, z: number, rotationY?: number }[] = [
     { type: 'buildingA', x: 12, z: 17, rotationY: 3 * Math.PI / 2 },
     { type: 'buildingJ', x: 12, z: 19, rotationY: Math.PI / 2 },
     { type: 'buildingJ', x: 12, z: 21, rotationY: Math.PI / 2 },
@@ -190,6 +211,18 @@ private initialBuildings: { type: string, x: number, z: number, rotationY?: numb
     { type: 'buildingK', x: 12, z: 29, rotationY: 3 * Math.PI / 2 },
     { type: 'buildingL', x: 12, z: 31, rotationY: 3 * Math.PI / 2 },
     { type: 'buildingM', x: 12, z: 33, rotationY: 3 * Math.PI / 2 },
+    { type: 'bardaA', x: 13, z: 5, rotationY: 0 },
+    { type: 'bardaA', x: 13, z: 6, rotationY: 0 },
+    { type: 'bardaA', x: 13, z: 7, rotationY: 0 },
+    { type: 'bardaA', x: 13, z: 8, rotationY: 0 },
+    { type: 'bardaA', x: 13, z: 9, rotationY: 0 },
+    { type: 'bardaA', x: 13, z: 10, rotationY: 0 },
+    { type: 'bardaA', x: 13, z: 11, rotationY: 0 },
+    { type: 'bardaA', x: 13, z: 12, rotationY: 0 },
+    { type: 'bardaA', x: 13, z: 13, rotationY: 0 },
+    { type: 'bardaA', x: 13, z: 14, rotationY: 0 },
+    { type: 'bardaA', x: 13, z: 15, rotationY: 0 },
+    { type: 'bardaA', x: 13, z: 16, rotationY: 0 },
     { type: 'banqueta', x: 13, z: 17, rotationY: 3 * Math.PI / 2 },
     { type: 'banqueta', x: 13, z: 18, rotationY: 3 * Math.PI / 2 },
     { type: 'banqueta', x: 13, z: 19, rotationY: 3 * Math.PI / 2 },
@@ -209,7 +242,27 @@ private initialBuildings: { type: string, x: number, z: number, rotationY?: numb
     { type: 'banqueta', x: 13, z: 33, rotationY: 3 * Math.PI / 2 },
     { type: 'banqueta', x: 13, z: 34, rotationY: 3 * Math.PI / 2 },
     { type: 'banqueta', x: 13, z: 35, rotationY: 3 * Math.PI / 2 },
-    { type: 'banqueta', x: 14, z: 17, rotationY: 3 * Math.PI / 2 },
+    { type: 'bardaA', x: 13, z: 36, rotationY: 0 },
+    { type: 'bardaA', x: 13, z: 37, rotationY: 0 },
+    { type: 'bardaA', x: 13, z: 38, rotationY: 0 },
+    { type: 'bardaA', x: 13, z: 39, rotationY: 0 },
+    { type: 'bardaA', x: 13, z: 40, rotationY: 0 },
+    { type: 'bardaA', x: 13, z: 41, rotationY: 0 },
+    { type: 'bardaA', x: 13, z: 42, rotationY: 0 },
+    { type: 'bardaA', x: 13, z: 43, rotationY: 0 },
+    { type: 'bardaA', x: 13, z: 44, rotationY: 0 },
+    { type: 'bardaA', x: 13, z: 45, rotationY: 0 },
+    { type: 'bardaA', x: 13, z: 46, rotationY: 0 },
+    { type: 'bardaA', x: 13, z: 47, rotationY: 0 },
+    { type: 'bardaA', x: 13, z: 48, rotationY: 0 },
+    { type: 'bardaA', x: 14, z: 5, rotationY: Math.PI / 2 },
+    { type: 'bardaA', x: 14, z: 7, rotationY: Math.PI / 2 },
+    { type: 'bardaA', x: 14, z: 9, rotationY: Math.PI / 2 },
+    { type: 'bardaA', x: 14, z: 11, rotationY: Math.PI / 2 },
+    { type: 'bardaA', x: 14, z: 13, rotationY: Math.PI / 2 },
+    { type: 'bardaA', x: 14, z: 15, rotationY: Math.PI / 2 },
+    { type: 'bardaA', x: 14, z: 16, rotationY: 3 * Math.PI / 2 },
+    { type: 'banqueta', x: 14, z: 17, rotationY: Math.PI / 2 },
     { type: 'streetF', x: 14, z: 18, rotationY: Math.PI / 2 },
     { type: 'streetA', x: 14, z: 19, rotationY: Math.PI / 2 },
     { type: 'streetA', x: 14, z: 20, rotationY: Math.PI / 2 },
@@ -228,6 +281,15 @@ private initialBuildings: { type: string, x: number, z: number, rotationY?: numb
     { type: 'streetA', x: 14, z: 33, rotationY: 3 * Math.PI / 2 },
     { type: 'streetF', x: 14, z: 34, rotationY: Math.PI },
     { type: 'banqueta', x: 14, z: 35, rotationY: 3 * Math.PI / 2 },
+    { type: 'bardaA', x: 14, z: 39, rotationY: Math.PI / 2 },
+    { type: 'bardaA', x: 14, z: 40, rotationY: 3 * Math.PI / 2 },
+    { type: 'bardaA', x: 14, z: 43, rotationY: Math.PI / 2 },
+    { type: 'bardaA', x: 14, z: 44, rotationY: 3 * Math.PI / 2 },
+    { type: 'bardaA', x: 14, z: 47, rotationY: Math.PI / 2 },
+    { type: 'bardaA', x: 14, z: 49, rotationY: Math.PI / 2 },
+    { type: 'bardaA', x: 15, z: 2, rotationY: 3 * Math.PI / 2 },
+    { type: 'bardaA', x: 15, z: 3, rotationY: Math.PI },
+    { type: 'bardaA', x: 15, z: 4, rotationY: Math.PI },
     { type: 'casaB', x: 15, z: 6, rotationY: 3 * Math.PI / 2 },
     { type: 'casaG', x: 15, z: 8, rotationY: 3 * Math.PI / 2 },
     { type: 'casaE', x: 15, z: 10, rotationY: 3 * Math.PI / 2 },
@@ -257,9 +319,14 @@ private initialBuildings: { type: string, x: number, z: number, rotationY?: numb
     { type: 'casaB', x: 15, z: 38, rotationY: 3 * Math.PI / 2 },
     { type: 'casaD', x: 15, z: 40, rotationY: 3 * Math.PI / 2 },
     { type: 'casaI', x: 15, z: 42, rotationY: 3 * Math.PI / 2 },
+    { type: 'bardaA', x: 15, z: 43, rotationY: Math.PI / 2 },
     { type: 'casaG', x: 15, z: 44, rotationY: 3 * Math.PI / 2 },
     { type: 'casaE', x: 15, z: 46, rotationY: 3 * Math.PI / 2 },
+    { type: 'bardaA', x: 15, z: 47, rotationY: Math.PI / 2 },
     { type: 'casaF', x: 15, z: 48, rotationY: 3 * Math.PI / 2 },
+    { type: 'bardaA', x: 15, z: 49, rotationY: Math.PI / 2 },
+    { type: 'bardaA', x: 16, z: 2, rotationY: 3 * Math.PI / 2 },
+    { type: 'bardaA', x: 16, z: 3, rotationY: 0 },
     { type: 'casaE', x: 16, z: 4, rotationY: Math.PI },
     { type: 'banqueta', x: 16, z: 5, rotationY: 0 },
     { type: 'banqueta', x: 16, z: 6, rotationY: 0 },
@@ -305,6 +372,7 @@ private initialBuildings: { type: string, x: number, z: number, rotationY?: numb
     { type: 'banqueta', x: 16, z: 46, rotationY: 3 * Math.PI / 2 },
     { type: 'banqueta', x: 16, z: 47, rotationY: 3 * Math.PI / 2 },
     { type: 'banqueta', x: 16, z: 48, rotationY: 3 * Math.PI / 2 },
+    { type: 'bardaA', x: 17, z: 2, rotationY: 3 * Math.PI / 2 },
     { type: 'banqueta', x: 17, z: 5, rotationY: 0 },
     { type: 'streetF', x: 17, z: 6, rotationY: Math.PI / 2 },
     { type: 'streetA', x: 17, z: 7, rotationY: Math.PI / 2 },
@@ -349,6 +417,8 @@ private initialBuildings: { type: string, x: number, z: number, rotationY?: numb
     { type: 'streetC', x: 17, z: 46, rotationY: Math.PI / 2 },
     { type: 'streetA', x: 17, z: 47, rotationY: 3 * Math.PI / 2 },
     { type: 'streetA', x: 17, z: 48, rotationY: 3 * Math.PI / 2 },
+    { type: 'bardaA', x: 18, z: 2, rotationY: 3 * Math.PI / 2 },
+    { type: 'bardaA', x: 18, z: 3, rotationY: 0 },
     { type: 'casaI', x: 18, z: 4, rotationY: Math.PI },
     { type: 'banqueta', x: 18, z: 5, rotationY: 0 },
     { type: 'streetA', x: 18, z: 6, rotationY: 0 },
@@ -394,6 +464,7 @@ private initialBuildings: { type: string, x: number, z: number, rotationY?: numb
     { type: 'streetA', x: 18, z: 46, rotationY: 0 },
     { type: 'banqueta', x: 18, z: 47, rotationY: 3 * Math.PI / 2 },
     { type: 'banqueta', x: 18, z: 48, rotationY: 3 * Math.PI / 2 },
+    { type: 'bardaA', x: 19, z: 2, rotationY: 3 * Math.PI / 2 },
     { type: 'banqueta', x: 19, z: 5, rotationY: 0 },
     { type: 'streetA', x: 19, z: 6, rotationY: 0 },
     { type: 'banqueta', x: 19, z: 7, rotationY: Math.PI / 2 },
@@ -438,6 +509,9 @@ private initialBuildings: { type: string, x: number, z: number, rotationY?: numb
     { type: 'streetA', x: 19, z: 46, rotationY: 0 },
     { type: 'banqueta', x: 19, z: 47, rotationY: 3 * Math.PI / 2 },
     { type: 'casaH', x: 19, z: 48, rotationY: 0 },
+    { type: 'bardaA', x: 19, z: 49, rotationY: Math.PI / 2 },
+    { type: 'bardaA', x: 20, z: 2, rotationY: 3 * Math.PI / 2 },
+    { type: 'bardaA', x: 20, z: 3, rotationY: 0 },
     { type: 'casaG', x: 20, z: 4, rotationY: Math.PI },
     { type: 'banqueta', x: 20, z: 5, rotationY: 0 },
     { type: 'streetA', x: 20, z: 6, rotationY: 0 },
@@ -481,6 +555,8 @@ private initialBuildings: { type: string, x: number, z: number, rotationY?: numb
     { type: 'banqueta', x: 20, z: 45, rotationY: Math.PI },
     { type: 'streetA', x: 20, z: 46, rotationY: 0 },
     { type: 'banqueta', x: 20, z: 47, rotationY: 3 * Math.PI / 2 },
+    { type: 'bardaA', x: 20, z: 49, rotationY: Math.PI / 2 },
+    { type: 'bardaA', x: 21, z: 2, rotationY: 3 * Math.PI / 2 },
     { type: 'banqueta', x: 21, z: 5, rotationY: 0 },
     { type: 'streetA', x: 21, z: 6, rotationY: 0 },
     { type: 'banqueta', x: 21, z: 7, rotationY: Math.PI / 2 },
@@ -525,6 +601,9 @@ private initialBuildings: { type: string, x: number, z: number, rotationY?: numb
     { type: 'streetA', x: 21, z: 46, rotationY: 0 },
     { type: 'banqueta', x: 21, z: 47, rotationY: 3 * Math.PI / 2 },
     { type: 'casaI', x: 21, z: 48, rotationY: 0 },
+    { type: 'bardaA', x: 21, z: 49, rotationY: Math.PI / 2 },
+    { type: 'bardaA', x: 22, z: 2, rotationY: 3 * Math.PI / 2 },
+    { type: 'bardaA', x: 22, z: 3, rotationY: 0 },
     { type: 'casaB', x: 22, z: 4, rotationY: Math.PI },
     { type: 'banqueta', x: 22, z: 5, rotationY: 0 },
     { type: 'streetA', x: 22, z: 6, rotationY: 0 },
@@ -569,6 +648,8 @@ private initialBuildings: { type: string, x: number, z: number, rotationY?: numb
     { type: 'banqueta', x: 22, z: 45, rotationY: Math.PI },
     { type: 'streetA', x: 22, z: 46, rotationY: 0 },
     { type: 'banqueta', x: 22, z: 47, rotationY: 3 * Math.PI / 2 },
+    { type: 'bardaA', x: 22, z: 49, rotationY: Math.PI / 2 },
+    { type: 'bardaA', x: 23, z: 2, rotationY: 3 * Math.PI / 2 },
     { type: 'banqueta', x: 23, z: 5, rotationY: 0 },
     { type: 'streetA', x: 23, z: 6, rotationY: 0 },
     { type: 'banqueta', x: 23, z: 7, rotationY: Math.PI / 2 },
@@ -612,6 +693,9 @@ private initialBuildings: { type: string, x: number, z: number, rotationY?: numb
     { type: 'streetA', x: 23, z: 46, rotationY: 0 },
     { type: 'banqueta', x: 23, z: 47, rotationY: 3 * Math.PI / 2 },
     { type: 'casaF', x: 23, z: 48, rotationY: 0 },
+    { type: 'bardaA', x: 23, z: 49, rotationY: Math.PI / 2 },
+    { type: 'bardaA', x: 24, z: 2, rotationY: 3 * Math.PI / 2 },
+    { type: 'bardaA', x: 24, z: 3, rotationY: 0 },
     { type: 'casaB', x: 24, z: 4, rotationY: Math.PI },
     { type: 'banqueta', x: 24, z: 5, rotationY: 0 },
     { type: 'streetA', x: 24, z: 6, rotationY: 0 },
@@ -656,6 +740,8 @@ private initialBuildings: { type: string, x: number, z: number, rotationY?: numb
     { type: 'banqueta', x: 24, z: 45, rotationY: Math.PI },
     { type: 'streetA', x: 24, z: 46, rotationY: 0 },
     { type: 'banqueta', x: 24, z: 47, rotationY: 3 * Math.PI / 2 },
+    { type: 'bardaA', x: 24, z: 49, rotationY: Math.PI / 2 },
+    { type: 'bardaA', x: 25, z: 2, rotationY: 3 * Math.PI / 2 },
     { type: 'banqueta', x: 25, z: 5, rotationY: 0 },
     { type: 'streetA', x: 25, z: 6, rotationY: 0 },
     { type: 'banqueta', x: 25, z: 7, rotationY: Math.PI / 2 },
@@ -700,6 +786,9 @@ private initialBuildings: { type: string, x: number, z: number, rotationY?: numb
     { type: 'streetA', x: 25, z: 46, rotationY: 0 },
     { type: 'banqueta', x: 25, z: 47, rotationY: 3 * Math.PI / 2 },
     { type: 'casaC', x: 25, z: 48, rotationY: 0 },
+    { type: 'bardaA', x: 25, z: 49, rotationY: Math.PI / 2 },
+    { type: 'bardaA', x: 26, z: 2, rotationY: 3 * Math.PI / 2 },
+    { type: 'bardaA', x: 26, z: 3, rotationY: 0 },
     { type: 'casaH', x: 26, z: 4, rotationY: Math.PI },
     { type: 'banqueta', x: 26, z: 5, rotationY: 0 },
     { type: 'streetA', x: 26, z: 6, rotationY: 0 },
@@ -745,6 +834,7 @@ private initialBuildings: { type: string, x: number, z: number, rotationY?: numb
     { type: 'streetA', x: 26, z: 46, rotationY: 0 },
     { type: 'banqueta', x: 26, z: 47, rotationY: 3 * Math.PI / 2 },
     { type: 'banqueta', x: 26, z: 48, rotationY: 3 * Math.PI / 2 },
+    { type: 'bardaA', x: 27, z: 2, rotationY: 3 * Math.PI / 2 },
     { type: 'banqueta', x: 27, z: 5, rotationY: 0 },
     { type: 'streetF', x: 27, z: 6, rotationY: 0 },
     { type: 'streetA', x: 27, z: 7, rotationY: Math.PI / 2 },
@@ -789,6 +879,7 @@ private initialBuildings: { type: string, x: number, z: number, rotationY?: numb
     { type: 'streetC', x: 27, z: 46, rotationY: 3 * Math.PI / 2 },
     { type: 'streetA', x: 27, z: 47, rotationY: 3 * Math.PI / 2 },
     { type: 'streetA', x: 27, z: 48, rotationY: 3 * Math.PI / 2 },
+    { type: 'bardaA', x: 28, z: 2, rotationY: 3 * Math.PI / 2 },
     { type: 'casaG', x: 28, z: 4, rotationY: Math.PI },
     { type: 'banqueta', x: 28, z: 5, rotationY: 0 },
     { type: 'banqueta', x: 28, z: 6, rotationY: 0 },
@@ -824,7 +915,7 @@ private initialBuildings: { type: string, x: number, z: number, rotationY?: numb
     { type: 'banqueta', x: 28, z: 36, rotationY: 3 * Math.PI / 2 },
     { type: 'banqueta', x: 28, z: 37, rotationY: 3 * Math.PI / 2 },
     { type: 'banqueta', x: 28, z: 38, rotationY: 3 * Math.PI / 2 },
-    { type: 'banqueta', x: 28, z: 39, rotationY: 3 * Math.PI / 2 },
+    { type: 'banqueta', x: 28, z: 39, rotationY: 0 },
     { type: 'banqueta', x: 28, z: 40, rotationY: 3 * Math.PI / 2 },
     { type: 'banqueta', x: 28, z: 41, rotationY: 3 * Math.PI / 2 },
     { type: 'banqueta', x: 28, z: 42, rotationY: 3 * Math.PI / 2 },
@@ -834,6 +925,9 @@ private initialBuildings: { type: string, x: number, z: number, rotationY?: numb
     { type: 'banqueta', x: 28, z: 46, rotationY: 3 * Math.PI / 2 },
     { type: 'banqueta', x: 28, z: 47, rotationY: 3 * Math.PI / 2 },
     { type: 'banqueta', x: 28, z: 48, rotationY: 3 * Math.PI / 2 },
+    { type: 'bardaA', x: 29, z: 2, rotationY: 3 * Math.PI / 2 },
+    { type: 'bardaA', x: 29, z: 3, rotationY: 0 },
+    { type: 'bardaA', x: 29, z: 4, rotationY: 0 },
     { type: 'casaC', x: 29, z: 6, rotationY: Math.PI / 2 },
     { type: 'casaB', x: 29, z: 8, rotationY: Math.PI / 2 },
     { type: 'casaB', x: 29, z: 10, rotationY: Math.PI / 2 },
@@ -861,11 +955,24 @@ private initialBuildings: { type: string, x: number, z: number, rotationY?: numb
     { type: 'banqueta', x: 29, z: 35, rotationY: 3 * Math.PI / 2 },
     { type: 'buildingK', x: 29, z: 36, rotationY: 0 },
     { type: 'casaH', x: 29, z: 38, rotationY: Math.PI / 2 },
+    { type: 'bardaA', x: 29, z: 39, rotationY: Math.PI / 2 },
     { type: 'casaG', x: 29, z: 40, rotationY: Math.PI / 2 },
+    { type: 'bardaA', x: 29, z: 41, rotationY: Math.PI / 2 },
     { type: 'casaB', x: 29, z: 42, rotationY: Math.PI / 2 },
+    { type: 'bardaA', x: 29, z: 43, rotationY: Math.PI / 2 },
     { type: 'casaC', x: 29, z: 44, rotationY: Math.PI / 2 },
+    { type: 'bardaA', x: 29, z: 45, rotationY: Math.PI / 2 },
     { type: 'casaA', x: 29, z: 46, rotationY: Math.PI / 2 },
+    { type: 'bardaA', x: 29, z: 47, rotationY: Math.PI / 2 },
     { type: 'casaA', x: 29, z: 48, rotationY: Math.PI / 2 },
+    { type: 'bardaA', x: 29, z: 49, rotationY: Math.PI / 2 },
+    { type: 'bardaA', x: 30, z: 5, rotationY: Math.PI / 2 },
+    { type: 'bardaA', x: 30, z: 6, rotationY: 3 * Math.PI / 2 },
+    { type: 'bardaA', x: 30, z: 8, rotationY: 3 * Math.PI / 2 },
+    { type: 'bardaA', x: 30, z: 10, rotationY: 3 * Math.PI / 2 },
+    { type: 'bardaA', x: 30, z: 12, rotationY: 3 * Math.PI / 2 },
+    { type: 'bardaA', x: 30, z: 14, rotationY: 3 * Math.PI / 2 },
+    { type: 'bardaA', x: 30, z: 16, rotationY: 3 * Math.PI / 2 },
     { type: 'banqueta', x: 30, z: 17, rotationY: 3 * Math.PI / 2 },
     { type: 'streetF', x: 30, z: 18, rotationY: 0 },
     { type: 'streetA', x: 30, z: 19, rotationY: Math.PI / 2 },
@@ -885,6 +992,24 @@ private initialBuildings: { type: string, x: number, z: number, rotationY?: numb
     { type: 'streetA', x: 30, z: 33, rotationY: 3 * Math.PI / 2 },
     { type: 'streetF', x: 30, z: 34, rotationY: 3 * Math.PI / 2 },
     { type: 'banqueta', x: 30, z: 35, rotationY: 3 * Math.PI / 2 },
+    { type: 'bardaA', x: 30, z: 38, rotationY: 3 * Math.PI / 2 },
+    { type: 'bardaA', x: 30, z: 40, rotationY: 3 * Math.PI / 2 },
+    { type: 'bardaA', x: 30, z: 42, rotationY: 3 * Math.PI / 2 },
+    { type: 'bardaA', x: 30, z: 44, rotationY: 3 * Math.PI / 2 },
+    { type: 'bardaA', x: 30, z: 47, rotationY: Math.PI / 2 },
+    { type: 'bardaA', x: 30, z: 49, rotationY: Math.PI / 2 },
+    { type: 'bardaA', x: 31, z: 5, rotationY: Math.PI },
+    { type: 'bardaA', x: 31, z: 6, rotationY: Math.PI },
+    { type: 'bardaA', x: 31, z: 7, rotationY: Math.PI },
+    { type: 'bardaA', x: 31, z: 8, rotationY: Math.PI },
+    { type: 'bardaA', x: 31, z: 9, rotationY: Math.PI },
+    { type: 'bardaA', x: 31, z: 10, rotationY: Math.PI },
+    { type: 'bardaA', x: 31, z: 11, rotationY: Math.PI },
+    { type: 'bardaA', x: 31, z: 12, rotationY: Math.PI },
+    { type: 'bardaA', x: 31, z: 13, rotationY: Math.PI },
+    { type: 'bardaA', x: 31, z: 14, rotationY: Math.PI },
+    { type: 'bardaA', x: 31, z: 15, rotationY: Math.PI },
+    { type: 'bardaA', x: 31, z: 16, rotationY: Math.PI },
     { type: 'banqueta', x: 31, z: 17, rotationY: 3 * Math.PI / 2 },
     { type: 'banqueta', x: 31, z: 18, rotationY: 3 * Math.PI / 2 },
     { type: 'banqueta', x: 31, z: 19, rotationY: 3 * Math.PI / 2 },
@@ -905,6 +1030,17 @@ private initialBuildings: { type: string, x: number, z: number, rotationY?: numb
     { type: 'banqueta', x: 31, z: 34, rotationY: 3 * Math.PI / 2 },
     { type: 'banqueta', x: 31, z: 35, rotationY: 3 * Math.PI / 2 },
     { type: 'buildingJ', x: 31, z: 36, rotationY: 0 },
+    { type: 'bardaA', x: 31, z: 38, rotationY: Math.PI },
+    { type: 'bardaA', x: 31, z: 39, rotationY: Math.PI },
+    { type: 'bardaA', x: 31, z: 40, rotationY: Math.PI },
+    { type: 'bardaA', x: 31, z: 41, rotationY: Math.PI },
+    { type: 'bardaA', x: 31, z: 42, rotationY: Math.PI },
+    { type: 'bardaA', x: 31, z: 43, rotationY: Math.PI },
+    { type: 'bardaA', x: 31, z: 44, rotationY: Math.PI },
+    { type: 'bardaA', x: 31, z: 45, rotationY: Math.PI },
+    { type: 'bardaA', x: 31, z: 46, rotationY: Math.PI },
+    { type: 'bardaA', x: 31, z: 47, rotationY: Math.PI },
+    { type: 'bardaA', x: 31, z: 48, rotationY: Math.PI },
     { type: 'buildingM', x: 32, z: 17, rotationY: Math.PI / 2 },
     { type: 'buildingK', x: 32, z: 19, rotationY: Math.PI / 2 },
     { type: 'buildingC', x: 32, z: 21, rotationY: Math.PI / 2 },
@@ -916,7 +1052,7 @@ private initialBuildings: { type: string, x: number, z: number, rotationY?: numb
     { type: 'buildingH', x: 32, z: 31, rotationY: Math.PI / 2 },
     { type: 'buildingI', x: 32, z: 32, rotationY: Math.PI / 2 },
     { type: 'buildingK', x: 32, z: 34, rotationY: Math.PI / 2 },
-];
+];  
 
   private createInitialBuildings(): void {
     this.initialBuildings.forEach(building => {
@@ -1256,7 +1392,19 @@ private initialBuildings: { type: string, x: number, z: number, rotationY?: numb
       case 'casaG': modelUrl = 'assets/casas/casa-g.glb'; break;
       case 'casaH': modelUrl = 'assets/casas/casa-h.glb'; break;
       case 'casaI': modelUrl = 'assets/casas/casa-i.glb'; break;
+
+      // Decoración
+      case 'arbolA': modelUrl = 'assets/decoracion/arbolA.glb'; break;
+      case 'arbolB': modelUrl = 'assets/decoracion/arbolB.glb'; break;
+      case 'arbolC': modelUrl = 'assets/decoracion/arbolC.glb'; break;
+      case 'arbolD': modelUrl = 'assets/decoracion/arbolD.glb'; break;
+      case 'arbolE': modelUrl = 'assets/decoracion/arbolE.glb'; break;
+      case 'banca': modelUrl = 'assets/decoracion/banca.glb'; break;
+      case 'bardaA': modelUrl = 'assets/decoracion/bardaA.glb'; break;
+      case 'bardaB': modelUrl = 'assets/decoracion/bardaB.glb'; break;
+
       case 'planter': modelUrl = 'assets/casas/planter.glb'; break;
+
     }
 
     this.loadBuildingModel(modelUrl, (model) => {
@@ -1340,6 +1488,16 @@ private initialBuildings: { type: string, x: number, z: number, rotationY?: numb
         case 'casaH': modelUrl = 'assets/casas/casa-h.glb'; break;
         case 'casaI': modelUrl = 'assets/casas/casa-i.glb'; break;
         case 'planter': modelUrl = 'assets/casas/planter.glb'; break;
+
+        // Decoracion
+        case 'arbolA': modelUrl = 'assets/decoracion/arbolA.glb'; break;
+        case 'arbolB': modelUrl = 'assets/decoracion/arbolB.glb'; break;
+        case 'arbolC': modelUrl = 'assets/decoracion/arbolC.glb'; break;
+        case 'arbolD': modelUrl = 'assets/decoracion/arbolD.glb'; break;
+        case 'arbolE': modelUrl = 'assets/decoracion/arbolE.glb'; break;
+        case 'banca': modelUrl = 'assets/decoracion/banca.glb'; break;
+        case 'bardaA': modelUrl = 'assets/decoracion/bardaA.glb'; break;
+        case 'bardaB': modelUrl = 'assets/decoracion/bardaB.glb'; break;
       }
 
       if (modelUrl) {
