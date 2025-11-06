@@ -1,46 +1,44 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-root',
   standalone: true,
   imports: [RouterOutlet],
-  template: `
-    <nav style="background: #eee; padding: 10px;">
-      <a routerLink="/city" style="margin-right: 10px;">🏙️ Ciudad</a>
-      <a routerLink="/energy" style="margin-right: 10px;">⚡ Energía</a>
-      <a routerLink="/sustainable-industry">🏭 Parque Industrial Sostenible</a>
-    </nav>
-
-    <!-- Aquí se renderizan las páginas -->
-    <router-outlet></router-outlet>
-
-    <!-- 🎵 Música global (se reproduce en todas las rutas) -->
-    <div class="music-container">
-      <iframe
-        width="0"
-        height="0"
-        [src]="videoUrl"
-        frameborder="0"
-        allow="autoplay; encrypted-media"
-        allowfullscreen>
-      </iframe>
-    </div>
-  `,
-  styles: [`
-    .music-container {
-      display: none; /* Oculta el video, pero deja sonar la música */
-    }
-  `]
+  templateUrl: './app.component.html',
+  styleUrl: './app.component.css'
 })
-export class AppComponent {
-  videoUrl: SafeResourceUrl;
+export class AppComponent implements OnInit {
+  audio = new Audio();
+  isPlaying = false;
 
-  constructor(private sanitizer: DomSanitizer) {
-    // ✅ URL del video en modo "embed", con autoplay y loop
-    this.videoUrl = this.sanitizer.bypassSecurityTrustResourceUrl(
-      'https://www.youtube.com/embed/HHYOBwzT4u4?autoplay=1&loop=1&playlist=HHYOBwzT4u4'
-    );
+  ngOnInit(): void {
+    // 🔊 Ruta al archivo tal como está en /public/assets/
+    this.audio.src = '/assets/fondo-musica.mp3';
+    this.audio.loop = true;
+    this.audio.volume = 0.4;
+
+    // 🖱️ Esperar interacción del usuario antes de reproducir
+    const startMusic = () => {
+      this.audio.play()
+        .then(() => {
+          this.isPlaying = true;
+          console.log('🎵 Música iniciada correctamente.');
+        })
+        .catch(err => console.warn('⚠️ No se pudo reproducir aún:', err));
+
+      window.removeEventListener('click', startMusic);
+    };
+
+    window.addEventListener('click', startMusic);
+  }
+
+  toggleMusic(): void {
+    if (this.isPlaying) {
+      this.audio.pause();
+    } else {
+      this.audio.play().catch(err => console.warn('⚠️ Error al reanudar:', err));
+    }
+    this.isPlaying = !this.isPlaying;
   }
 }
