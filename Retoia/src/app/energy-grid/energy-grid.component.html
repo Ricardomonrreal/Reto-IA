@@ -39,9 +39,8 @@
     <div class="subtitle">FUENTES DE ENERGÍA:</div>
     
     <!-- Botones de Fuentes de Energía -->
-    <!-- ✅ Usamos el getter energySourcesEntries del TS -->
     <button 
-      *ngFor="let source of energySourcesEntries"
+      *ngFor="let source of energySourcesUI | keyvalue" 
       class="building-btn"
       [class.selected]="selectedSource === source.key"
       [disabled]="money < source.value.cost && selectedSource !== source.key"
@@ -58,19 +57,19 @@
     </div>
     
     <!-- 🆕 Botones de tipo de mantenimiento -->
-<button 
-  *ngFor="let maint of maintenanceTypes | keyvalue"
-  class="building-btn maintenance-btn-selector"
-  [class.selected]="selectedMaintenanceType === maint.key"
-  (click)="selectMaintenanceTypeFromString(maint.key)">
-  <span>{{ maint.value.icon }} {{ maint.value.name | uppercase }}</span>
-  <div class="building-info">
-    Restaura: {{ maint.value.healthRestore }}% | x{{ maint.value.costMultiplier }}
-    <span *ngIf="maint.value.bonusEfficiency" style="color: #00AAFF; font-weight: bold;">
-      (+{{ maint.value.bonusEfficiency * 100 }}% ⚡ 30s)
-    </span>
-  </div>
-</button>
+    <button 
+      *ngFor="let maint of maintenanceTypes | keyvalue"
+      class="building-btn maintenance-btn-selector"
+      [class.selected]="selectedMaintenanceType === maint.key"
+      (click)="selectMaintenanceTypeFromString(maint.key)">
+      <span>{{ maint.value.icon }} {{ maint.value.name | uppercase }}</span>
+      <div class="building-info">
+        Restaura: {{ maint.value.healthRestore }}% | x{{ maint.value.costMultiplier }}
+        <span *ngIf="maint.value.bonusEfficiency" style="color: #00AAFF; font-weight: bold;">
+          (+{{ maint.value.bonusEfficiency * 100 }}% ⚡ 30s)
+        </span>
+      </div>
+    </button>
     
     <!-- Botón de Cable -->
     <button 
@@ -121,17 +120,17 @@
           <span>{{ source.value.name }}</span>
         </div>
         <div class="col-basic">
-  {{ getMaintenanceCost(source.key, 'basic') }}€
-  <div class="restore-info">+50% (2s)</div>
-</div>
-<div class="col-standard">
-  {{ getMaintenanceCost(source.key, 'standard') }}€
-  <div class="restore-info">+100% (3s)</div>
-</div>
-<div class="col-premium">
-  {{ getMaintenanceCost(source.key, 'premium') }}€
-  <div class="restore-info bonus">+100% +10%⚡ (4s)</div>
-</div>
+          {{ getMaintenanceCost(source.key, 'basic') }}€
+          <div class="restore-info">+50% (2s)</div>
+        </div>
+        <div class="col-standard">
+          {{ getMaintenanceCost(source.key, 'standard') }}€
+          <div class="restore-info">+100% (3s)</div>
+        </div>
+        <div class="col-premium">
+          {{ getMaintenanceCost(source.key, 'premium') }}€
+          <div class="restore-info bonus">+100% +10%⚡ (4s)</div>
+        </div>
       </div>
     </div>
     
@@ -170,11 +169,11 @@
         
         <div class="health-info">
           <div class="health-header">
-            <span class="source-icon">{{ energySourcesUI[source.type].icon }}</span>
+            <span class="source-icon">{{ energySources[source.type].icon }}</span>
             <span class="source-location">({{ source.x }},{{ source.z }})</span>
             
             <!-- 🆕 Indicadores especiales -->
-            <span *ngIf="source.isUnderMaintenance" class="status-indicator maintenance-indicator">
+        <span *ngIf="source.isUnderMaintenance" class="status-indicator maintenance-indicator">
               ⏳
             </span>
             <span *ngIf="source.bonusEfficiency && !source.isUnderMaintenance" 
@@ -188,9 +187,10 @@
           <div class="health-bar-container">
             <div class="health-bar" 
                  [style.width.%]="source.health"
-                 [style.background]="
-                   source.health < 30 ? '#ff0000' :
-                   source.health < 60 ? '#ffaa00' : '#00ff00'">
+                 [style.background]="source.isUnderMaintenance ? '#FFFF00' : 
+                                    source.bonusEfficiency ? '#00AAFF' :
+                                    source.health < 30 ? '#ff0000' : 
+                                    source.health < 60 ? '#ffaa00' : '#00ff00'">
             </div>
           </div>
           
@@ -206,15 +206,10 @@
             </span>
           </div>
         </div>
-        <button class="maintenance-btn"
-                [disabled]="money < (energySourcesUI[source.type].maintenanceCost || 0) || source.health >= 95"
-                (click)="performMaintenance(source.x, source.z)"
-                [title]="source.health >= 95 ? 'No necesita mantenimiento' : 'Reparar al 100%'">
-          🔧 {{ energySourcesUI[source.type].maintenanceCost || 0 }}€
-        </button>
       </div>
     </div>
     
+    <!-- Resumen de salud general -->
     <div class="health-summary">
       <div class="summary-item">
         <span>🟢 Buenas:</span>
@@ -252,6 +247,23 @@
       </div>
     </div>
     
+    <!-- 🆕 Sección de mecánicas de mantenimiento -->
+    <div style="margin-top: 12px; padding-top: 8px; border-top: 1px solid #FFD700;">
+      <div style="color: #FFD700; font-weight: bold; margin-bottom: 5px;">🔧 MANTENIMIENTO:</div>
+      <div style="font-size: 11px;">
+        <div><strong>🔧 Básico:</strong> 50% + barato + 2s</div>
+        <div><strong>⚙️ Estándar:</strong> 100% restauración + 3s</div>
+        <div><strong>✨ Premium:</strong> 100% + bonus 30s + 4s</div>
+        <div style="margin-top: 6px; color: #FFFF00;">
+          ⚠️ Producción = 0 durante proceso
+        </div>
+        <div style="color: #00AAFF;">
+          ⚡ Bonus Premium: +10% eficiencia
+        </div>
+      </div>
+    </div>
+    
+    <!-- 🆕 Sección de nuevas mecánicas -->
     <div style="margin-top: 12px; padding-top: 8px; border-top: 1px solid #ff6666;">
       <div style="color: #ff6666; font-weight: bold; margin-bottom: 5px;">⚠️ MECÁNICAS:</div>
       <div style="font-size: 11px;">
@@ -269,7 +281,7 @@
     </div>
   </div>
   
-  <!-- Indicador de acción actual -->
+  <!-- Indicador de acción actual (ACTUALIZADO) -->
   <div class="action-indicator" 
        [class.eraser-mode]="selectedSource === 'eraser'"
        [class.cable-mode]="selectedSource === 'cable'"
@@ -282,11 +294,11 @@
       - Click en fuente para aplicar
     </span>
     <span *ngIf="selectedSource !== 'eraser' && selectedSource !== 'cable' && selectedSource !== 'maintenance'">
-      ⚡COLOCANDO: {{ energySourcesUI[selectedSource].name || 'NADA' }}
+      ⚡ COLOCANDO: {{ energySourcesUI[selectedSource].name || 'NADA' }}
     </span>
   </div>
 
-  <!-- Panel de Estado -->
+  <!-- Alerta de Estado -->
   <div class="alert-panel" 
        [class.alert-success]="energyBalance >= 0"
        [class.alert-danger]="energyBalance < 0">
@@ -306,10 +318,71 @@
     </div>
   </div>
 
-  <!-- Botón Volver -->
+  <!-- 🆕 Notificaciones flotantes -->
+  <div class="notifications-container">
+    <!-- Alerta de fuente crítica -->
+    <div class="notification notification-critical" 
+         *ngIf="criticalSources > 0">
+      <span class="notification-icon">⚠️</span>
+      <div class="notification-content">
+        <strong>¡ALERTA CRÍTICA!</strong>
+        <div>{{ criticalSources }} fuente(s) en estado crítico</div>
+      </div>
+    </div>
+    
+    <!-- Alerta de cables ineficientes -->
+    <div class="notification notification-warning" 
+         *ngIf="powerLines.length > 0 && hasInefficientCables()">
+      <span class="notification-icon">📉</span>
+      <div class="notification-content">
+        <strong>Cables Ineficientes</strong>
+        <div>Algunos cables pierden mucha energía</div>
+      </div>
+    </div>
+    
+    <!-- 🆕 Alerta de fuentes en mantenimiento -->
+    <div class="notification notification-info" 
+         *ngIf="sourcesInMaintenance > 0">
+      <span class="notification-icon">⏳</span>
+      <div class="notification-content">
+        <strong>Mantenimiento en Progreso</strong>
+        <div>{{ sourcesInMaintenance }} fuente(s) sin producir</div>
+      </div>
+    </div>
+    
+    <!-- 🆕 Notificación de bonus activo -->
+    <div class="notification notification-bonus" 
+         *ngIf="sourcesWithBonus > 0">
+      <span class="notification-icon">⚡</span>
+      <div class="notification-content">
+        <strong>Bonus Activo!</strong>
+        <div>{{ sourcesWithBonus }} fuente(s) con +10% eficiencia</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🆕 Tooltip de ayuda flotante -->
+  <div class="help-tooltip" *ngIf="placedSources.length === 0">
+    <div class="tooltip-arrow"></div>
+    <div class="tooltip-content">
+      <strong>👋 ¡Bienvenido!</strong>
+      <div>1. Selecciona una fuente de energía</div>
+      <div>2. Click en el mapa para construir</div>
+      <div>3. Usa cables 🔌 para conectar</div>
+      <div>4. Selecciona mantenimiento 🔧 cuando necesites</div>
+      <div style="margin-top: 8px; color: #ffaa00;">
+        💡 Las fuentes se degradan con el tiempo
+      </div>
+      <div style="color: #00AAFF;">
+        ⚡ Premium da bonus temporal de eficiencia
+      </div>
+    </div>
+  </div>
+
+  <!-- Botón de volver al menú -->
   <div class="boton-volver-container">
     <button class="boton-volver" (click)="goToMenu()">
-      ⬅ Volver a Niveles
+      ⬅️ VOLVER AL MENÚ
     </button>
   </div>
 </div>
