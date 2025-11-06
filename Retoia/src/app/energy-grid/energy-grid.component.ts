@@ -108,10 +108,9 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
   }
 
   // 🔹 Navegar al menú principal
-  goToMenu(): void {
-    this.router.navigate(['/niveles']);
+goToMenu() {
+  this.router.navigate(['/niveles']);
   }
-
   // 🔹 Seleccionar tipo de fuente
   selectSource(sourceKey: string): void {
     this.selectedSource = this.selectedSource === sourceKey ? '' : sourceKey;

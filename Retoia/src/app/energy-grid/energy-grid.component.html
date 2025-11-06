@@ -1,31 +1,210 @@
-<div class="subtitle">FUENTES DE ENERGÍA:</div>
+<div class="game-container">
+  <div #renderCanvas class="canvas-container"></div>
+  
+  <!-- Panel de Control Principal -->
+  <div class="ui-panel">
+    <div class="title">⚡ RED DE ENERGÍA LIMPIA</div>
+    
+    <!-- Presupuesto -->
+    <div class="score">
+      💰 PRESUPUESTO: <span style="color: #ffff00;">{{ money | number:'1.0-2' }}</span>
+    </div>
 
-<!-- ✅ Bucle sin errores de tipo -->
-<button 
-  *ngFor="let source of energySourcesEntries"
-  class="building-btn"
-  [class.selected]="selectedSource === source.key"
-  [disabled]="money < source.value.cost && selectedSource !== source.key"
-  (click)="selectSource(source.key)">
-  <span>{{ source.value.icon }} {{ source.value.name }}</span>
-  <div class="building-info">
-    Costo: {{ source.value.cost }}€ | {{ source.value.production }}kW
+    <!-- Estadísticas de Energía -->
+    <div class="energy-stats">
+      <div class="stat-row">
+        <span class="stat-label">⚡ Producción:</span>
+        <span class="stat-value production">{{ totalProduction | number:'1.0-1' }} kW</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">🏠 Consumo:</span>
+        <span class="stat-value consumption">{{ totalConsumption | number:'1.0-0' }} kW</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">📊 Balance:</span>
+        <span class="stat-value" [style.color]="balanceColor">
+          {{ energyBalance >= 0 ? '+' : '' }}{{ energyBalance | number:'1.0-1' }} kW
+        </span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">♻️ Eficiencia:</span>
+        <span class="stat-value efficiency">{{ efficiencyPercent }}%</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">🌍 Emisiones:</span>
+        <span class="stat-value emissions">{{ totalEmissions | number:'1.0-0' }} kg CO2/h</span>
+      </div>
+    </div>
+    
+    <div class="subtitle">FUENTES DE ENERGÍA:</div>
+    
+    <!-- Botones de Fuentes de Energía -->
+    <!-- ✅ Usamos el getter energySourcesEntries del TS -->
+    <button 
+      *ngFor="let source of energySourcesEntries"
+      class="building-btn"
+      [class.selected]="selectedSource === source.key"
+      [disabled]="money < source.value.cost && selectedSource !== source.key"
+      (click)="selectSource(source.key)">
+      <span>{{ source.value.icon }} {{ source.value.name }}</span>
+      <div class="building-info">
+        Costo: {{ source.value.cost }}€ | {{ source.value.production }}kW
+      </div>
+    </button>
+    
+    <!-- Botón de Cable -->
+    <button 
+      class="building-btn cable-btn"
+      [class.selected]="selectedSource === 'cable'"
+      (click)="selectSource('cable')">
+      <span>🔌 CONECTAR RED</span>
+      <div class="building-info">
+        Une fuentes de energía
+      </div>
+    </button>
+
+    <!-- Botón Borrador -->
+    <button 
+      class="building-btn eraser-btn"
+      [class.selected]="selectedSource === 'eraser'"
+      (click)="selectSource('eraser')">
+      <span>🗑️ BORRADOR</span>
+    </button>
+    
+    <div class="instructions-bottom">
+      <div style="color: #ffff00; margin-bottom: 5px;">💡 OBJETIVO:</div>
+      <div>• Cubrir demanda energética</div>
+      <div>• Usar solo renovables (0 CO2)</div>
+      <div>• Conectar red eléctrica</div>
+      <div>• 🆕 Mantener fuentes en buen estado</div>
+      <div style="margin-top: 8px; border-top: 1px solid #00ff00; padding-top: 8px;">
+        <strong>SHIFT + Click:</strong> Mantenimiento
+      </div>
+    </div>
   </div>
-</button>
+  
+  <!-- 🆕 Panel de Salud de Fuentes -->
+  <div class="health-panel" *ngIf="placedSources.length > 0">
+    <div class="panel-title">🔧 ESTADO DE FUENTES</div>
+    <div class="health-list">
+      <div *ngFor="let source of placedSources" 
+           class="health-item"
+           [class.critical]="source.health < 30"
+           [class.warning]="source.health >= 30 && source.health < 60"
+           [class.healthy]="source.health >= 60">
+        <div class="health-info">
+          <div class="health-header">
+            <span class="source-icon">{{ energySourcesUI[source.type]?.icon }}</span>
+            <span class="source-location">({{ source.x }},{{ source.z }})</span>
+            <span class="health-percent">{{ source.health | number:'1.0-0' }}%</span>
+          </div>
+          <div class="health-bar-container">
+            <div class="health-bar" 
+                 [style.width.%]="source.health"
+                 [style.background]="
+                   source.health < 30 ? '#ff0000' :
+                   source.health < 60 ? '#ffaa00' : '#00ff00'">
+            </div>
+          </div>
+          <div class="efficiency-text">
+            ⚡ Eficiencia: {{ (source.efficiency * 100) | number:'1.0-0' }}%
+          </div>
+        </div>
+        <button class="maintenance-btn"
+                [disabled]="money < (energySourcesUI[source.type]?.maintenanceCost || 0) || source.health >= 95"
+                (click)="performMaintenance(source.x, source.z)"
+                [title]="source.health >= 95 ? 'No necesita mantenimiento' : 'Reparar al 100%'">
+          🔧 {{ energySourcesUI[source.type]?.maintenanceCost || 0 }}€
+        </button>
+      </div>
+    </div>
+    
+    <div class="health-summary">
+      <div class="summary-item">
+        <span>🟢 Buenas:</span>
+        <span>{{ healthySources }}</span>
+      </div>
+      <div class="summary-item">
+        <span>🟡 Advertencia:</span>
+        <span>{{ warningSources }}</span>
+      </div>
+      <div class="summary-item critical-count">
+        <span>🔴 Críticas:</span>
+        <span>{{ criticalSources }}</span>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Panel de Instrucciones -->
+  <div class="instructions-panel">
+    <div class="instructions-title">🎮 CONTROLES</div>
+    <div>• <span style="color: #ffff00;">Click</span>: Colocar fuente</div>
+    <div>• <span style="color: #ffff00;">SHIFT + Click</span>: Mantenimiento 🆕</div>
+    <div>• <span style="color: #ffff00;">Modo Cable</span>: Click en 2 fuentes</div>
+    <div>• <span style="color: #ffff00;">Mouse Wheel</span>: Zoom</div>
+    <div>• <span style="color: #ffff00;">Click Medio/Der</span>: Mover cámara</div>
+    
+    <div style="margin-top: 12px; padding-top: 8px; border-top: 1px solid #00ff00;">
+      <div style="color: #ffff00; font-weight: bold; margin-bottom: 5px;">📋 GUÍA RÁPIDA:</div>
+      <div style="font-size: 11px;">
+        <div><strong>☀️ Solar:</strong> Bajo costo, baja producción</div>
+        <div><strong>💨 Eólica:</strong> Medio costo, buena producción</div>
+        <div><strong>💧 Hidro:</strong> Alto costo, máxima producción</div>
+        <div><strong>🔋 Batería:</strong> Almacena energía</div>
+        <div><strong>☢️ Nuclear:</strong> Alto costo, producción constante</div>
+      </div>
+    </div>
+    
+    <div style="margin-top: 12px; padding-top: 8px; border-top: 1px solid #ff6666;">
+      <div style="color: #ff6666; font-weight: bold; margin-bottom: 5px;">⚠️MECÁNICAS:</div>
+      <div style="font-size: 11px;">
+        <div><strong>🔧 Degradación:</strong> Las fuentes pierden salud</div>
+        <div><strong>⚡ Pérdida:</strong> Cables largos = menos energía</div>
+        <div><strong>🟢 Verde:</strong> Salud buena (60-100%)</div>
+        <div><strong>🟡 Amarillo:</strong> Necesita mantención (30-60%)</div>
+        <div><strong>🔴 Rojo:</strong> Crítico + humo (<30%)</div>
+        <div style="margin-top: 6px; color: #ffaa00;">
+          💡 Cables cortos = mayor eficiencia
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Indicador de acción actual -->
+  <div class="action-indicator" 
+       [class.eraser-mode]="selectedSource === 'eraser'"
+       [class.cable-mode]="selectedSource === 'cable'">
+    <span *ngIf="selectedSource === 'eraser'">🗑️ MODO BORRADOR</span>
+    <span *ngIf="selectedSource === 'cable'">🔌 MODO CONEXIÓN - Click en 2 fuentes</span>
+    <span *ngIf="selectedSource !== 'eraser' && selectedSource !== 'cable'">
+      ⚡ COLOCANDO: {{ energySourcesUI[selectedSource]?.name || 'NADA' }}
+    </span>
+  </div>
 
-<!-- ✅ Botón cable -->
-<button 
-  class="building-btn cable-btn"
-  [class.selected]="selectedSource === 'cable'"
-  (click)="selectSource('cable')">
-  <span>🔌 CONECTAR RED</span>
-  <div class="building-info">Une fuentes de energía</div>
-</button>
+  <!-- Panel de Estado -->
+  <div class="alert-panel" 
+       [class.alert-success]="energyBalance >= 0"
+       [class.alert-danger]="energyBalance < 0">
+    <div *ngIf="energyBalance >= 0" class="alert-content">
+      <span class="alert-icon">✅</span>
+      <div>
+        <strong>RED ESTABLE</strong>
+        <div class="alert-sub">Producción supera consumo</div>
+      </div>
+    </div>
+    <div *ngIf="energyBalance < 0" class="alert-content">
+      <span class="alert-icon">⚠️</span>
+      <div>
+        <strong>DÉFICIT ENERGÉTICO</strong>
+        <div class="alert-sub">Necesitas más fuentes de energía</div>
+      </div>
+    </div>
+  </div>
 
-<!-- ✅ Botón borrador -->
-<button 
-  class="building-btn eraser-btn"
-  [class.selected]="selectedSource === 'eraser'"
-  (click)="selectSource('eraser')">
-  <span>🗑️ BORRADOR</span>
-</button>
+  <!-- Botón Volver -->
+  <div class="boton-volver-container">
+    <button class="boton-volver" (click)="goToMenu()">
+      ⬅ Volver a Niveles
+    </button>
+  </div>
+</div>
