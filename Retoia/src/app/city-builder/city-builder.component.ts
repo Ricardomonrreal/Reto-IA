@@ -37,7 +37,7 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
   @ViewChild('renderCanvas', { static: true }) 
   private canvasRef!: ElementRef<HTMLDivElement>;
   router: any;
-  goToMenu() {
+   goToMenu() {
   this.router.navigate(['/niveles']);
   }
 
