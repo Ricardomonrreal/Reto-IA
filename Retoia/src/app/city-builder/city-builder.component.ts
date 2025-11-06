@@ -3,7 +3,7 @@ import { Component, OnInit, OnDestroy, ElementRef, ViewChild, model } from '@ang
 import { CommonModule } from '@angular/common';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { animationFrameScheduler } from 'rxjs';
+import { Router } from '@angular/router';
 
 interface BuildingConfig {
   color: number;
@@ -36,7 +36,13 @@ interface GridCell {
 export class CityBuilderComponent implements OnInit, OnDestroy {
   @ViewChild('renderCanvas', { static: true }) 
   private canvasRef!: ElementRef<HTMLDivElement>;
+  router: any;
+  goToMenu() {
+  this.router.navigate(['/niveles']);
+  }
 
+  currentBudget = 10000;
+  transportPublicoCompletado = false;
   totalInhabitants = 100;
   totalGreenAreaM2 = 0;
   requiredGreenAreaM2 = 900;
@@ -55,12 +61,10 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
       'casaA', 'casaB', 'casaC', 'casaD', 'casaE', 'casaF', 'casaG', 'casaH', 'casaI'
     ],
     'Calles': [
-      'streetA', 'streetB', 'streetC', 'streetD', 'streetE', 'streetF', 'streetG',
-      'lightA', 'lightB', 'lightC', 'banqueta'
+      'streetA', 'streetB', 'streetC', 'streetE', 'streetF', 'streetG', 'banqueta'
     ],
     'Decoración': [
-      'planter', 'arbolA', 'arbolB', 'arbolC', 'arbolD', 'arbolE', 'banca', 'bardaA',
-      'bardaB'
+      'planter', 'arbolA', 'arbolC', 'arbolE', 'banca'
     ]
   };
 
@@ -106,15 +110,11 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
     casaI: { thumb: 'assets/thumbs/casa-i.png', name: 'Casa I'},
 
     //decoracion
-    planter: { thumb: 'assets/thumbs/planter.png', name: 'Planter'},
-    arbolA: { thumb: 'assets/thumbs/arbolA.png', name: 'Árbol A' },
-    arbolB: { thumb: 'assets/thumbs/arbolB.png', name: 'Árbol B' },
-    arbolC: { thumb: 'assets/thumbs/arbolC.png', name: 'Árbol C' },
-    arbolD: { thumb: 'assets/thumbs/arbolD.png', name: 'Árbol D' },
-    arbolE: { thumb: 'assets/thumbs/arbolE.png', name: 'Árbol E' },
+    planter: { thumb: 'assets/thumbs/planter.png', name: 'Jardinera'},
     banca: { thumb: 'assets/thumbs/banca.png', name: 'Banca'},
-    bardaA: { thumb: 'assets/thumbs/bardaA.png', name: 'Barda A'},
-    bardaB: { thumb: 'assets/thumbs/bardaB.png', name: 'Barda B'}
+    arbolA: { thumb: 'assets/thumbs/arbolA.png', name: 'Árbol A' },
+    arbolC: { thumb: 'assets/thumbs/arbolC.png', name: 'Árbol B' },
+    arbolE: { thumb: 'assets/thumbs/arbolE.png', name: 'Árbol C' }
   };
 
   private gltfLoader = new GLTFLoader();
@@ -1054,6 +1054,44 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
     { type: 'buildingK', x: 32, z: 34, rotationY: Math.PI / 2 },
 ];  
 
+  private buildingCosts: { [key: string]: number } = {
+    // Edificios (Costo 0)
+    buildingA: 0, buildingB: 0, buildingC: 0, buildingD: 0, buildingE: 0, 
+    buildingF: 0, buildingG: 0, buildingH: 0, buildingI: 0, buildingJ: 0, 
+    buildingK: 0, buildingL: 0, buildingM: 0, buildingN: 0,
+
+    // Calles (Costo 0)
+    streetA: 0, streetB: 0, streetC: 0, streetD: 0, streetE: 0, 
+    streetF: 0, streetG: 0, lightA: 0, lightB: 0, lightC: 0, banqueta: 0,
+
+    // Casas (Costo 0)
+    casaA: 0, casaB: 0, casaC: 0, casaD: 0, casaE: 0, 
+    casaF: 0, casaG: 0, casaH: 0, casaI: 0,
+
+    // Decoración (Con Costo y Limitado)
+    arbolA: 100, arbolB: 100, arbolC: 100, arbolD: 100, arbolE: 100, 
+    planter: 300, banca: 50
+  };
+
+  private buildingLimits: { [key: string]: number } = {
+    arbolA: 5, arbolC: 5, arbolE: 5, planter: 5, banca: 10,
+  };
+
+  private placedBuildingCounts: { [key: string]: number } = {};
+
+  private checkTransportePublicoValidation(): void {
+    // Requisito: 5 bancas (ejemplo) para simular una 'ruta'
+    const benchesNeeded = 5; 
+    const currentBenches = this.placedBuildingCounts['banca'] || 0;
+    
+    // Solo actualiza si cambia el estado
+    const newState = currentBenches >= benchesNeeded;
+    if (this.transportPublicoCompletado !== newState) {
+        this.transportPublicoCompletado = newState;
+        console.log(`Estado de Transporte Público: ${this.transportPublicoCompletado ? 'COMPLETADO' : 'PENDIENTE'}`);
+    }
+  }
+
   private createInitialBuildings(): void {
     this.initialBuildings.forEach(building => {
       const { type, x: anchorX, z: anchorZ, rotationY } = building;
@@ -1231,7 +1269,7 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
       -d * aspect, d * aspect, d, -d, 1, 1000
     );
 
-    this.camera.zoom = 0.7;
+    this.camera.zoom = 0.5;
     this.camera.updateProjectionMatrix();
     this.camera.position.set(-20, 20, -20);
     this.camera.lookAt(1, 0, 1);
@@ -1588,6 +1626,16 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
     // Si llegamos aquí, el edificio es mutable (construido por el usuario).
     
     const buildingType = cellData.type; // Obtener el tipo de edificio
+    const cost = this.buildingCosts[buildingType] || 0;
+    
+    if (cost > 0) {
+        this.currentBudget += cost;
+        
+        // Restar del contador de modelos colocados
+        if (this.placedBuildingCounts[buildingType] && this.placedBuildingCounts[buildingType] > 0) {
+            this.placedBuildingCounts[buildingType]--;
+        }
+    }
     
     // Find and remove the building from the scene
     const buildingToRemove = this.buildingsGroup.children.find(
@@ -1611,6 +1659,7 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
     // Clear grid data
     this.gridData[x][z] = null;
     this.calculatePopulationAndGreenArea();
+    this.checkTransportePublicoValidation();
 
     // Deduct points (half of what was gained)
     const config = this.buildingTypes[buildingType];
@@ -1702,7 +1751,7 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
       const cell = intersects[0].object as THREE.Mesh;
       const { gridX, gridZ } = cell.userData;
       
-      const existingCellData = this.gridData[gridX][gridZ]; // ⬅️ Obtener los datos existentes
+      const existingCellData = this.gridData[gridX][gridZ];
 
       // Eraser mode - remove building
       if (this.selectedBuilding === 'eraser') {
@@ -1712,26 +1761,53 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
       }
       // Build mode - place building
       else {
-        // 1. Condición ACEPTABLE: La celda está vacía.
-        // 2. Condición ACEPTABLE: La celda no es permanente Y el tipo es 'banqueta'.
-        if (!existingCellData || (existingCellData.type === 'banqueta' && !existingCellData.isPermanent)) { // ⬅️ LÓGICA CLAVE MODIFICADA AQUÍ
-          
-          // 1. Si ya existe un elemento (una banqueta), lo eliminamos primero
-          if (existingCellData) {
-            this.removeBuilding(gridX, gridZ);
-          }
+        
+        const typeToPlace = this.selectedBuilding;
+        const cost = this.buildingCosts[typeToPlace] || 0; // Obtener costo (0 para no-decoración)
 
-          const config = this.buildingTypes[this.selectedBuilding];
-          if (true) {
+        // 1. Condición ACEPTABLE: La celda está vacía O es una banqueta no permanente.
+        if (!existingCellData || (existingCellData.type === 'banqueta' && !existingCellData.isPermanent)) {
+          
+          let canBuild = true;
+
+          // ⬅️ MODIFICADO: Aplicar validación de presupuesto y límites SOLO a elementos con costo (Decoración)
+          if (cost > 0) { 
+              const limit = this.buildingLimits[typeToPlace];
+              const currentCount = this.placedBuildingCounts[typeToPlace] || 0;
+
+              if (this.currentBudget < cost) {
+                  console.warn(`Presupuesto insuficiente para construir ${typeToPlace}. Necesitas ${cost}, tienes ${this.currentBudget}.`);
+                  canBuild = false;
+              }
+              
+              if (limit && currentCount >= limit) {
+                  console.warn(`Límite alcanzado para ${typeToPlace}. Límite: ${limit}, Colocados: ${currentCount}.`);
+                  canBuild = false;
+              }
+
+              if (canBuild) {
+                  // Deducir el costo y aumentar el contador
+                  this.currentBudget -= cost;
+                  this.placedBuildingCounts[typeToPlace] = currentCount + 1;
+              }
+          }
+          
+          if (canBuild) {
+            
+            // 1. Si ya existe un elemento (una banqueta), lo eliminamos primero (con su lógica de reembolso, que será 0 si no es decoración)
+            if (existingCellData) {
+              this.removeBuilding(gridX, gridZ);
+            }
+
             this.createBuilding3D(
-              this.selectedBuilding,
+              typeToPlace, 
               gridX,
               gridZ,
               this.currentBuildingRotationY
             );
 
             this.gridData[gridX][gridZ] = {
-              type: this.selectedBuilding,
+              type: typeToPlace,
               isPermanent: false,
               rotationY: this.currentBuildingRotationY,
               anchorX: gridX,
@@ -1739,6 +1815,7 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
             };
 
             this.calculatePopulationAndGreenArea();
+            this.checkTransportePublicoValidation(); // ⬅️ Comprobar validación de transporte
           }
         }
       }
@@ -1847,7 +1924,7 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
     // Aplicamos zoom progresivo (suave)
     this.camera.zoom = THREE.MathUtils.clamp(
       this.camera.zoom + zoomDelta,
-      0.5,   // 🔽 mínimo (más lejos)
+      0.4,   // 🔽 mínimo (más lejos)
       4.0    // 🔼 máximo (más cerca)
     );
 

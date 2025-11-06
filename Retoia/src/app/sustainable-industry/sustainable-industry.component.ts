@@ -3,6 +3,9 @@ import { Component, ElementRef, OnInit, OnDestroy, ViewChild } from '@angular/co
 import { CommonModule, KeyValuePipe } from '@angular/common';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { Router } from '@angular/router';
+
+
 
 interface IndustrialBuilding {
   name: string;
@@ -25,7 +28,11 @@ interface IndustrialBuilding {
 export class SustainableIndustryComponent implements OnInit, OnDestroy {
   @ViewChild('renderCanvas', { static: true }) 
   private canvasRef!: ElementRef<HTMLDivElement>;
+constructor(private router: Router) {}
 
+ goToMenu() {
+  this.router.navigate(['/niveles']);
+  }
   // Estadísticas principales
   money = 15000;
   totalProduction = 0;
@@ -112,12 +119,12 @@ export class SustainableIndustryComponent implements OnInit, OnDestroy {
 
   // Mapeo de modelos 3D
   private industrialBuildingModels: { [key: string]: string } = {
-    cleanFactory: 'assets/building-a.glb',
-    researchCenter: 'assets/building-b.glb',
-    recyclingPlant: 'assets/building-c.glb',
-    warehouse: 'assets/skyscraper-c.glb',
-    solarPanel: 'assets/building-a.glb',
-    smartHub: 'assets/building-b.glb'
+    cleanFactory: 'assets/tercera/building-h.glb',
+    researchCenter: 'assets/tercera/building-k.glb',
+    recyclingPlant: 'assets/tercera/building-l.glb',
+    warehouse: 'assets/tercera/building-k.glb',
+    solarPanel: 'assets/tercera/building-q.glb',
+    smartHub: 'assets/tercera/building-n.glb'
   };
 
   private buildingScaleConfig: { [key: string]: { scale: number } } = {

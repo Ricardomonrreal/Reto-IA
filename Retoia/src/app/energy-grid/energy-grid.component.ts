@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy, ElementRef, ViewChild } from '@angular/co
 import { CommonModule } from '@angular/common';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-
+import { Router } from '@angular/router';
 interface EnergySource {
   name: string;
   icon: string;
@@ -70,6 +70,10 @@ interface MaintenanceType {
 export class EnergyGridComponent implements OnInit, OnDestroy {
   @ViewChild('renderCanvas', { static: true })
   private canvasRef!: ElementRef<HTMLDivElement>;
+  router: any;
+   goToMenu() {
+  this.router.navigate(['/niveles']);
+  }
 
   // ===== ESTADO DEL JUEGO =====
   money = 5000;
