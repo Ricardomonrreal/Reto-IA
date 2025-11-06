@@ -22,7 +22,7 @@ Tu objetivo es construir una ciudad sostenible gestionando recursos, energía e 
 
 Cada decisión afecta el medio ambiente, la economía y el bienestar ciudadano.`;
 
-  private textoOriginalCreditos = ` Desarrollado por el equipo EcoCybers
+  private textoOriginalCreditos = ` Desarrollado por el equipo EcoIA
 Integrantes:
 - Sofía Herrera
 - Ricardo Monrreal
