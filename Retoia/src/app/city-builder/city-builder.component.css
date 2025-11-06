@@ -379,3 +379,57 @@
     0% { filter: brightness(100%); }
     100% { filter: brightness(150%); } /* Aclara el color para simular un brillo */
 }
+
+
+.back-btn {
+  background-color: #ffb347;
+  color: #fff;
+  font-weight: bold;
+  border: none;
+  border-radius: 12px;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-size: 18px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.back-btn:hover {
+  background-color: #ff9933;
+  transform: scale(1.05);
+}
+/* === Botón de volver al menú de niveles === */
+.boton-volver-container {
+  position: fixed; /* Siempre visible, fuera del flujo normal */
+  bottom: 20px;
+  right: 20px;
+  z-index: 1000; /* Encima del canvas o de otros elementos */
+}
+
+.boton-volver {
+  background-color: #71b1dc; /* Verde ecológico */
+  color: #fff;
+  font-weight: bold;
+  font-size: 16px;
+  padding: 10px 18px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  transition: all 0.25s ease;
+  font-family: 'bits', sans-serif;
+}
+
+.boton-volver:hover {
+  background-color: #6d83c5;
+  transform: scale(1.05);
+  box-shadow: 0 0 12px #6da7e5;
+}
+
+/* === Ajustes generales del contenido === */
+.main-content {
+  margin-top: 80px; /* 👈 espacio para que el botón no tape el título */
+  padding: 20px;
+  overflow-y: auto;
+  max-height: 90vh;
+}
