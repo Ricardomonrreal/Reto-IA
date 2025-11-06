@@ -3,6 +3,7 @@ import { Component, OnInit, OnDestroy, ElementRef, ViewChild, model } from '@ang
 import { CommonModule } from '@angular/common';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { Router } from '@angular/router';
 
 interface BuildingConfig {
   color: number;
@@ -35,6 +36,10 @@ interface GridCell {
 export class CityBuilderComponent implements OnInit, OnDestroy {
   @ViewChild('renderCanvas', { static: true }) 
   private canvasRef!: ElementRef<HTMLDivElement>;
+  router: any;
+  goToMenu() {
+  this.router.navigate(['/niveles']);
+  }
 
   totalInhabitants = 100;
   totalGreenAreaM2 = 0;

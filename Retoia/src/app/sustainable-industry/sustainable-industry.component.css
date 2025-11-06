@@ -386,7 +386,7 @@
 }
 
 .boton-volver {
-  background-color: #43a047; /* Verde ecológico */
+  background-color: #71b1dc; /* Verde ecológico */
   color: #fff;
   font-weight: bold;
   font-size: 16px;
@@ -400,9 +400,9 @@
 }
 
 .boton-volver:hover {
-  background-color: #66bb6a;
+  background-color: #6d83c5;
   transform: scale(1.05);
-  box-shadow: 0 0 12px #66bb6a;
+  box-shadow: 0 0 12px #6da7e5;
 }
 
 /* === Ajustes generales del contenido === */
