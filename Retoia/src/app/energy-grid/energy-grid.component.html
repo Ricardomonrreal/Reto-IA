@@ -94,7 +94,7 @@
            [class.healthy]="source.health >= 60">
         <div class="health-info">
           <div class="health-header">
-            <span class="source-icon">{{ energySourcesUI[source.type]?.icon }}</span>
+            <span class="source-icon">{{ energySourcesUI[source.type].icon }}</span>
             <span class="source-location">({{ source.x }},{{ source.z }})</span>
             <span class="health-percent">{{ source.health | number:'1.0-0' }}%</span>
           </div>
@@ -111,10 +111,10 @@
           </div>
         </div>
         <button class="maintenance-btn"
-                [disabled]="money < (energySourcesUI[source.type]?.maintenanceCost || 0) || source.health >= 95"
+                [disabled]="money < (energySourcesUI[source.type].maintenanceCost || 0) || source.health >= 95"
                 (click)="performMaintenance(source.x, source.z)"
                 [title]="source.health >= 95 ? 'No necesita mantenimiento' : 'Reparar al 100%'">
-          🔧 {{ energySourcesUI[source.type]?.maintenanceCost || 0 }}€
+          🔧 {{ energySourcesUI[source.type].maintenanceCost || 0 }}€
         </button>
       </div>
     </div>
@@ -177,7 +177,7 @@
     <span *ngIf="selectedSource === 'eraser'">🗑️ MODO BORRADOR</span>
     <span *ngIf="selectedSource === 'cable'">🔌 MODO CONEXIÓN - Click en 2 fuentes</span>
     <span *ngIf="selectedSource !== 'eraser' && selectedSource !== 'cable'">
-      ⚡ COLOCANDO: {{ energySourcesUI[selectedSource]?.name || 'NADA' }}
+      ⚡ COLOCANDO: {{ energySourcesUI[selectedSource].name || 'NADA' }}
     </span>
   </div>
 
