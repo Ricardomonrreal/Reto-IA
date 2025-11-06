@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ElementRef, ViewChild } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
@@ -8,8 +8,8 @@ interface EnergySource {
   name: string;
   icon: string;
   cost: number;
-  production: number; // kW
-  emissions: number; // kg CO2/hora
+  production: number;
+  emissions: number;
   color: number;
   height: number;
   maintenanceCost: number;
@@ -30,7 +30,6 @@ interface Consumer {
   connected: boolean;
 }
 
-// 🆕 Interfaz actualizada para fuentes colocadas
 interface PlacedSource {
   type: string;
   x: number;
@@ -38,10 +37,10 @@ interface PlacedSource {
   health: number;
   lastMaintenance: number;
   efficiency: number;
-  bonusEfficiency?: number; // 🆕 Bonus temporal
-  bonusExpiresAt?: number; // 🆕 Cuándo expira el bonus
-  isUnderMaintenance?: boolean; // 🆕 Si está en mantenimiento
-  maintenanceEndsAt?: number; // 🆕 Cuándo termina el mantenimiento
+  bonusEfficiency?: number;
+  bonusExpiresAt?: number;
+  isUnderMaintenance?: boolean;
+  maintenanceEndsAt?: number;
 }
 
 interface PowerLine {
@@ -51,14 +50,13 @@ interface PowerLine {
   efficiency: number;
 }
 
-// 🆕 Nueva interfaz para tipos de mantenimiento
 interface MaintenanceType {
   name: string;
   icon: string;
-  healthRestore: number; // Porcentaje que restaura
-  costMultiplier: number; // Multiplicador del costo base
-  duration: number; // Tiempo que tarda (ms)
-  bonusEfficiency?: number; // Bonus de eficiencia temporal
+  healthRestore: number;
+  costMultiplier: number;
+  duration: number;
+  bonusEfficiency?: number;
 }
 
 @Component({
@@ -68,11 +66,15 @@ interface MaintenanceType {
   templateUrl: './energy-grid.component.html',
   styleUrls: ['./energy-grid.component.css']
 })
-export class EnergyGridComponent implements OnInit, OnDestroy {
+export class EnergyGridComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('renderCanvas', { static: true })
   private canvasRef!: ElementRef<HTMLDivElement>;
   
   constructor(private router: Router) {}
+  
+  private isOverUI = false;
+  gameOver = false;
+  gameOverReason = '';
   
   goToMenu() {
     this.router.navigate(['/niveles']);
@@ -83,7 +85,7 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
   selectedSource = 'solar';
   isConnecting = false;
   connectionStart: { x: number, z: number } | null = null;
-  selectedMaintenanceType: 'basic' | 'standard' | 'premium' | null = null; // 🆕
+  selectedMaintenanceType: 'basic' | 'standard' | 'premium' | null = null;
 
   // ===== UI DATA =====
   energySourcesUI: { [key: string]: BuildingUI } = {
@@ -94,7 +96,6 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
     nuclear: { icon: '☢️', name: 'NUCLEAR', cost: 2000, production: 500 }
   };
 
-  // 🆕 Tipos de mantenimiento disponibles
   maintenanceTypes: Record<'basic' | 'standard' | 'premium', MaintenanceType> = {
     basic: {
       name: 'Básico',
@@ -162,7 +163,6 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
     return this.powerLines.some(line => line.efficiency < 0.6);
   }
 
-  // 🆕 Nuevos getters para estados especiales
   get sourcesInMaintenance(): number {
     return this.placedSources.filter(s => s.isUnderMaintenance).length;
   }
@@ -248,7 +248,6 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
   private lastEconomyUpdate = 0;
   private readonly economyInterval = 3000;
   private readonly moneyChangeRate = 0.01;
-  private lastStatsUpdate = 0;
 
   ngOnInit(): void {
     this.initGrid();
@@ -261,13 +260,18 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
     this.addEventListeners();
   }
 
+  // ✅ MEJORA: Mover lógica de UI a AfterViewInit
+  ngAfterViewInit(): void {
+    this.preventUIEventPropagation();
+    this.setupScrollIndicator();
+  }
+
   ngOnDestroy(): void {
     this.removeEventListeners();
     if (this.animationId) cancelAnimationFrame(this.animationId);
     this.renderer?.dispose();
   }
 
-  // 🆕 Método para seleccionar tipo de mantenimiento
   selectMaintenanceType(type: 'basic' | 'standard' | 'premium'): void {
     this.selectedMaintenanceType = type;
     this.isConnecting = false;
@@ -275,14 +279,12 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
     this.connectionStart = null;
   }
 
-  // 🆕 Método auxiliar para casting seguro desde el template
   selectMaintenanceTypeFromString(type: string): void {
     if (type === 'basic' || type === 'standard' || type === 'premium') {
       this.selectMaintenanceType(type);
     }
   }
 
-  // 🆕 Método para calcular costo de mantenimiento
   getMaintenanceCost(sourceType: string, maintenanceType: 'basic' | 'standard' | 'premium'): number {
     const source = this.energySources[sourceType];
     const maintenance = this.maintenanceTypes[maintenanceType];
@@ -428,7 +430,7 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
   }
 
   private createConsumers(): void {
-    const numConsumers = 25;
+    const numConsumers = 10;
     const usedPositions = new Set<string>();
 
     const houseModels = [
@@ -495,7 +497,7 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
     this.updateStats();
   }
 
-  private createLabel(x: number, z: number, text: string, color: number): void {
+private createLabel(x: number, z: number, text: string, color: number): void {
     const canvas = document.createElement('canvas');
     canvas.width = 128;
     canvas.height = 64;
@@ -737,7 +739,53 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
     this.updateStats();
   }
 
- private updateStats(): void {
+  // ✅ MEJORA: Prevenir propagación sin setTimeout
+  private preventUIEventPropagation(): void {
+    const uiPanels = [
+      '.ui-panel',
+      '.instructions-panel',
+      '.maintenance-cost-table',
+      '.health-panel',
+      '.alert-panel',
+      '.notifications-container',
+      '.action-indicator',
+      '.help-tooltip',
+      '.boton-volver-container'
+    ];
+
+    uiPanels.forEach(selector => {
+      const panel = document.querySelector(selector) as HTMLElement;
+      if (panel) {
+        panel.addEventListener('wheel', (e: WheelEvent) => {
+          e.stopPropagation();
+          const hasScroll = panel.scrollHeight > panel.clientHeight;
+          if (!hasScroll) {
+            e.preventDefault();
+          }
+        }, { passive: false });
+
+        panel.addEventListener('mousedown', (e: MouseEvent) => e.stopPropagation());
+        panel.addEventListener('mouseup', (e: MouseEvent) => e.stopPropagation());
+        panel.addEventListener('click', (e: MouseEvent) => e.stopPropagation());
+
+        panel.addEventListener('mousemove', (e: MouseEvent) => {
+          if (e.buttons > 0) {
+            e.stopPropagation();
+          }
+        });
+
+        panel.addEventListener('mouseenter', () => {
+          this.isOverUI = true;
+        });
+
+        panel.addEventListener('mouseleave', () => {
+          this.isOverUI = false;
+        });
+      }
+    });
+  }
+
+  private updateStats(): void {
     this.totalProduction = 0;
     this.totalEmissions = 0;
     
@@ -746,28 +794,23 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
     this.placedSources.forEach(placedSource => {
       const source = this.energySources[placedSource.type];
       
-      // Limpiar bonus expirado
       if (placedSource.bonusExpiresAt && now > placedSource.bonusExpiresAt) {
         placedSource.bonusEfficiency = undefined;
         placedSource.bonusExpiresAt = undefined;
       }
       
-      // Calcular eficiencia total con bonus
       let totalEfficiency = placedSource.efficiency;
       if (placedSource.bonusEfficiency && !placedSource.isUnderMaintenance) {
         totalEfficiency += placedSource.bonusEfficiency;
-        totalEfficiency = Math.min(1.2, totalEfficiency); // Máximo 120%
+        totalEfficiency = Math.min(1.2, totalEfficiency);
       }
       
-      // Si está en mantenimiento, reducir producción a 0
       if (placedSource.isUnderMaintenance) {
         totalEfficiency = 0;
       }
       
-      // Producción base × eficiencia con bonus
       let production = source.production * totalEfficiency;
       
-      // Aplicar pérdida por cable
       const connectedLine = this.powerLines.find(
         line => (line.from.x === placedSource.x && line.from.z === placedSource.z) ||
                 (line.to.x === placedSource.x && line.to.z === placedSource.z)
@@ -821,17 +864,17 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
       this.isConnecting = true;
       this.selectedSource = 'cable';
       this.connectionStart = null;
-      this.selectedMaintenanceType = null; // 🆕
+      this.selectedMaintenanceType = null;
     } else if (type === 'eraser') {
       this.isConnecting = false;
       this.selectedSource = 'eraser';
       this.connectionStart = null;
-      this.selectedMaintenanceType = null; // 🆕
+      this.selectedMaintenanceType = null;
     } else {
       this.isConnecting = false;
       this.selectedSource = type;
       this.connectionStart = null;
-      this.selectedMaintenanceType = null; // 🆕
+      this.selectedMaintenanceType = null;
     }
   }
 
@@ -841,7 +884,10 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
     const source = this.energySources[this.selectedSource];
     if (!source) return;
 
-    if (this.money < source.cost) return;
+    if (this.money < source.cost) {
+      console.log(`💸 Necesitas ${source.cost}€ (tienes ${this.money}€)`);
+      return;
+    }
 
     this.money -= source.cost;
     this.money = Math.round(this.money * 100) / 100;
@@ -900,7 +946,6 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
     this.lastDegradationUpdate = now;
     
     this.placedSources.forEach(source => {
-      // No degradar si está en mantenimiento
       if (source.isUnderMaintenance) return;
       
       const sourceConfig = this.energySources[source.type];
@@ -915,7 +960,7 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
     });
   }
 
-  // 🆕 Actualizar apariencia visual con estados especiales
+  // ✅ MEJORA: Visual actualizado con limpieza de humo
   private updateSourceVisual(source: PlacedSource): void {
     const model = this.sourcesGroup.children.find(
       child => child.userData['gridX'] === source.x && child.userData['gridZ'] === source.z
@@ -927,18 +972,16 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
       if (child instanceof THREE.Mesh) {
         const material = child.material as THREE.MeshLambertMaterial;
         
-        // Si está en mantenimiento, color amarillo parpadeante
         if (source.isUnderMaintenance) {
-          const pulse = Math.sin(Date.now() * 0.005) * 0.5 + 0.5;
+          // ✅ MEJORA: Pulso más suave
+          const pulse = Math.sin(Date.now() * 0.003) * 0.3 + 0.5;
           material.emissive = new THREE.Color(0xFFFF00);
-          material.emissiveIntensity = 0.3 + pulse * 0.3;
+          material.emissiveIntensity = 0.2 + pulse * 0.2;
         }
-        // Si tiene bonus, color azul brillante
         else if (source.bonusEfficiency) {
           material.emissive = new THREE.Color(0x00AAFF);
           material.emissiveIntensity = 0.4;
         }
-        // Estados normales de salud
         else if (source.health < 30) {
           material.emissive = new THREE.Color(0xFF0000);
           material.emissiveIntensity = 0.5;
@@ -952,10 +995,25 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
       }
     });
     
-    // Agregar humo si está muy dañado y no en mantenimiento
+    // Agregar humo si está crítico
     if (source.health < 30 && !source.isUnderMaintenance && !model.userData['hasSmoke']) {
       this.addSmokeParticles(source.x, source.z, model);
       model.userData['hasSmoke'] = true;
+    }
+    
+    // ✅ MEJORA: Limpiar humo cuando mejora la salud
+    if (source.health >= 30 && model.userData['hasSmoke']) {
+      const smoke = model.children.find(child => child.userData['isSmoke']);
+      if (smoke) {
+        smoke.children.forEach(particle => {
+          if (particle instanceof THREE.Mesh) {
+            particle.geometry.dispose();
+            (particle.material as THREE.Material).dispose();
+          }
+        });
+        model.remove(smoke);
+        model.userData['hasSmoke'] = false;
+      }
     }
   }
 
@@ -990,40 +1048,37 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
     parent.add(particles);
   }
 
-  // 🆕 Función actualizada de mantenimiento con tipos
+  // ✅ MEJORA: Mantenimiento con mejor feedback
   performMaintenance(x: number, z: number, maintenanceType: 'basic' | 'standard' | 'premium'): void {
     const source = this.placedSources.find(s => s.x === x && s.z === z);
-    if (!source) return;
+    if (!source) {
+      console.log('⚠️ No hay fuente en esta posición');
+      return;
+    }
     
     const sourceConfig = this.energySources[source.type];
     const maintenance = this.maintenanceTypes[maintenanceType];
     const cost = this.getMaintenanceCost(source.type, maintenanceType);
     
-    // Verificar dinero
     if (this.money < cost) {
-      console.log('💸 No tienes suficiente dinero para este mantenimiento');
+      console.log(`💸 Necesitas ${cost}€ (tienes ${this.money}€)`);
       return;
     }
     
-    // Si ya está en mantenimiento, no permitir
     if (source.isUnderMaintenance) {
       console.log('⏳ Esta fuente ya está en mantenimiento');
       return;
     }
     
-    // Cobrar
     this.money -= cost;
     this.money = Math.round(this.money * 100) / 100;
     
-    // Marcar como en mantenimiento
     source.isUnderMaintenance = true;
     source.maintenanceEndsAt = Date.now() + maintenance.duration;
     
-    console.log(`⏳ Mantenimiento ${maintenance.name} iniciado (${maintenance.duration}ms)...`);
+    console.log(`⏳ Mantenimiento ${maintenance.name} iniciado en ${sourceConfig.icon} (${x},${z})...`);
     
-    // Aplicar mantenimiento después del tiempo especificado
     setTimeout(() => {
-      // Restaurar salud
       const newHealth = Math.min(100, source.health + maintenance.healthRestore);
       source.health = newHealth;
       source.efficiency = source.health / 100;
@@ -1031,16 +1086,13 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
       source.isUnderMaintenance = false;
       source.maintenanceEndsAt = undefined;
       
-      // Aplicar bonus si es premium
       if (maintenance.bonusEfficiency) {
         source.bonusEfficiency = maintenance.bonusEfficiency;
-        source.bonusExpiresAt = Date.now() + 30000; // 30 segundos
+        source.bonusExpiresAt = Date.now() + 30000;
       }
       
-      // Actualizar visual
       this.updateSourceVisual(source);
       
-      // Remover humo
       const model = this.sourcesGroup.children.find(
         child => child.userData['gridX'] === x && child.userData['gridZ'] === z
       );
@@ -1055,6 +1107,98 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
       
       console.log(`✅ Mantenimiento ${maintenance.name} completado en (${x},${z})`);
     }, maintenance.duration);
+  }
+
+  // ✅ MEJORA: Múltiples condiciones de Game Over
+  private checkGameOverConditions(): void {
+    if (this.gameOver) return;
+
+    // 1. Fuente quemada
+    const burnedSources = this.placedSources.filter(s => s.health <= 0);
+    if (burnedSources.length > 0) {
+      const source = burnedSources[0];
+      this.gameOverReason = `¡La fuente ${this.energySources[source.type].icon} ${this.energySources[source.type].name} en (${source.x}, ${source.z}) se quemó completamente!`;
+      this.triggerGameOver();
+      return;
+    }
+    
+    // 2. Sin dinero y déficit crítico
+    if (this.money <= 0 && this.energyBalance < -200) {
+      this.gameOverReason = '¡Te quedaste sin dinero con un déficit energético crítico! 💸⚡';
+      this.triggerGameOver();
+      return;
+    }
+    
+    // 3. Todas las fuentes en estado crítico
+    if (this.placedSources.length > 0 && 
+        this.placedSources.every(s => s.health < 20 && !s.isUnderMaintenance)) {
+      this.gameOverReason = '¡Todas tus fuentes de energía están en estado crítico! 🔥';
+      this.triggerGameOver();
+      return;
+    }
+  }
+
+  private triggerGameOver(): void {
+    this.gameOver = true;
+    
+    if (this.animationId) {
+      cancelAnimationFrame(this.animationId);
+    }
+    
+    this.applyGameOverVisuals();
+    
+    console.log('💀 GAME OVER:', this.gameOverReason);
+  }
+
+  private applyGameOverVisuals(): void {
+    this.scene.background = new THREE.Color(0x330000);
+    
+    this.sourcesGroup.children.forEach(child => {
+      child.traverse((obj) => {
+        if (obj instanceof THREE.Mesh) {
+          const material = obj.material as THREE.MeshLambertMaterial;
+          material.emissive = new THREE.Color(0xFF0000);
+          material.emissiveIntensity = 0.8;
+        }
+      });
+    });
+    
+    this.renderer.render(this.scene, this.camera);
+  }
+
+  restartGame(): void {
+    this.sourcesGroup.clear();
+    this.linesGroup.clear();
+    
+    this.gameOver = false;
+    this.gameOverReason = '';
+    this.money = 5000;
+    this.placedSources = [];
+    this.powerLines = [];
+    this.gridData = Array(this.gridSize).fill(null).map(() => Array(this.gridSize).fill(null));
+    
+    this.scene.background = new THREE.Color(0x87CEEB);
+    
+    this.animate();
+    
+    console.log('🔄 Juego reiniciado');
+  }
+
+  private setupScrollIndicator(): void {
+    const panel = document.querySelector('.ui-panel') as HTMLElement;
+    if (panel) {
+      const checkScroll = () => {
+        if (panel.scrollHeight > panel.clientHeight) {
+          panel.classList.add('has-scroll');
+        } else {
+          panel.classList.remove('has-scroll');
+        }
+      };
+      
+      checkScroll();
+      panel.addEventListener('scroll', checkScroll);
+      window.addEventListener('resize', checkScroll);
+    }
   }
 
   private clampCameraPosition(): void {
@@ -1098,8 +1242,12 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
     }
   };
 
-  // 🆕 onClick actualizado para manejar modo mantenimiento
+  // ✅ MEJORA: Prevenir clicks sobre UI
   private onClick = (event: MouseEvent): void => {
+    if (this.isOverUI) {
+      return;
+}
+
     this.raycaster.setFromCamera(this.mouse, this.camera);
     const intersects = this.raycaster.intersectObjects(this.groundGroup.children);
 
@@ -1107,10 +1255,12 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
       const cell = intersects[0].object as THREE.Mesh;
       const { gridX, gridZ } = cell.userData;
 
-      // 🆕 Si está en modo mantenimiento
       if (this.selectedSource === 'maintenance' && this.selectedMaintenanceType) {
         if (this.gridData[gridX][gridZ]) {
           this.performMaintenance(gridX, gridZ, this.selectedMaintenanceType);
+          return;
+        } else {
+          console.log('⚠️ No hay ninguna fuente en esta posición para mantener');
           return;
         }
       }
@@ -1154,6 +1304,11 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
   };
 
   private onMouseWheel = (event: WheelEvent): void => {
+    // ✅ MEJORA: No hacer zoom si está sobre UI
+    if (this.isOverUI) {
+      return;
+    }
+
     event.preventDefault();
 
     const zoomStrength = 0.25;
@@ -1171,7 +1326,7 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
   private onKeyDown = (event: KeyboardEvent): void => {
     if (event.key === 'Delete' || event.key === 'Backspace') {
       this.selectedSource = 'eraser';
-      this.selectedMaintenanceType = null; // 🆕
+      this.selectedMaintenanceType = null;
     }
 
     const move = 0.6;
@@ -1201,7 +1356,7 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
     window.addEventListener('click', this.onClick);
     window.addEventListener('mousedown', this.onMouseDown);
     window.addEventListener('mouseup', this.onMouseUp);
-    window.addEventListener('wheel', this.onMouseWheel);
+    window.addEventListener('wheel', this.onMouseWheel, { passive: false });
     window.addEventListener('keydown', this.onKeyDown);
     window.addEventListener('resize', this.onWindowResize);
     window.addEventListener('contextmenu', this.onRightClick);
@@ -1218,7 +1373,10 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
     window.removeEventListener('contextmenu', this.onRightClick);
   }
 
+  // ✅ MEJORA: Loop de animación optimizado
   private animate = (): void => {
+    if (this.gameOver) return; // No continuar animando si el juego terminó
+    
     this.animationId = requestAnimationFrame(this.animate);
     
     // Animar aerogeneradores
@@ -1255,12 +1413,15 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
 
     const now = Date.now();
     
-    this.updateDegradation();
-    
-    if (now - this.lastStatsUpdate > 1000) {
+    // ✅ MEJORA: Solo actualizar degradación y stats cada segundo
+    if (now - this.lastDegradationUpdate >= this.degradationInterval) {
+      this.updateDegradation();
       this.updateStats();
-      this.lastStatsUpdate = now;
+      this.lastDegradationUpdate = now;
     }
+
+    // ✅ MEJORA: Verificar condiciones de Game Over
+    this.checkGameOverConditions();
 
     this.updateEconomy();
 
