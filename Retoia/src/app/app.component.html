@@ -1,12 +1,7 @@
-<router-outlet></router-outlet>
+<!-- Botón global para controlar la música -->
+<button class="music-toggle" (click)="toggleMusic()">
+  🎵 {{ isPlaying ? '' : '' }}
+</button>
 
-<div class="music-container">
-  <iframe
-    width="0"
-    height="0"
-    [src]="https://youtu.be/HHYOBwzT4u4?si=OZfNpvBjg8i20EY3"
-    frameborder="0"
-    allow="autoplay; encrypted-media"
-    allowfullscreen>
-  </iframe>
-</div>
+<!-- Contenedor principal del enrutador -->
+<router-outlet></router-outlet>
