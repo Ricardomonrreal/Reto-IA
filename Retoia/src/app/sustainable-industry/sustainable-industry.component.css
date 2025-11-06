@@ -405,10 +405,16 @@
   box-shadow: 0 0 12px #6da7e5;
 }
 
+
 /* === Ajustes generales del contenido === */
 .main-content {
   margin-top: 80px; /* 👈 espacio para que el botón no tape el título */
   padding: 20px;
   overflow-y: auto;
   max-height: 90vh;
+}
+
+
+.music-container {
+  display: none;
 }
