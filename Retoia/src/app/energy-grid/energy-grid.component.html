@@ -7,23 +7,23 @@
     
     <!-- Presupuesto -->
     <div class="score">
-      💰 PRESUPUESTO: <span style="color: #ffff00;">{{ money }}</span>
+      💰 PRESUPUESTO: <span style="color: #ffff00;">{{ money | number:'1.0-2' }}</span>
     </div>
 
     <!-- Estadísticas de Energía -->
     <div class="energy-stats">
       <div class="stat-row">
         <span class="stat-label">⚡ Producción:</span>
-        <span class="stat-value production">{{ totalProduction }} kW</span>
+        <span class="stat-value production">{{ totalProduction | number:'1.0-1' }} kW</span>
       </div>
       <div class="stat-row">
         <span class="stat-label">🏠 Consumo:</span>
-        <span class="stat-value consumption">{{ totalConsumption }} kW</span>
+        <span class="stat-value consumption">{{ totalConsumption | number:'1.0-0' }} kW</span>
       </div>
       <div class="stat-row">
         <span class="stat-label">📊 Balance:</span>
         <span class="stat-value" [style.color]="balanceColor">
-          {{ energyBalance >= 0 ? '+' : '' }}{{ energyBalance }} kW
+          {{ energyBalance >= 0 ? '+' : '' }}{{ energyBalance | number:'1.0-1' }} kW
         </span>
       </div>
       <div class="stat-row">
@@ -32,7 +32,7 @@
       </div>
       <div class="stat-row">
         <span class="stat-label">🌍 Emisiones:</span>
-        <span class="stat-value emissions">{{ totalEmissions }} kg CO2/h</span>
+        <span class="stat-value emissions">{{ totalEmissions | number:'1.0-0' }} kg CO2/h</span>
       </div>
     </div>
     
@@ -75,8 +75,60 @@
       <div>• Cubrir demanda energética</div>
       <div>• Usar solo renovables (0 CO2)</div>
       <div>• Conectar red eléctrica</div>
+      <div>• 🆕 Mantener fuentes en buen estado</div>
       <div style="margin-top: 8px; border-top: 1px solid #00ff00; padding-top: 8px;">
-        <strong>Casas:</strong> Consumidores
+        <strong>SHIFT + Click:</strong> Mantenimiento
+      </div>
+    </div>
+  </div>
+  
+  <!-- 🆕 Panel de Salud de Fuentes -->
+  <div class="health-panel" *ngIf="placedSources.length > 0">
+    <div class="panel-title">🔧 ESTADO DE FUENTES</div>
+    <div class="health-list">
+      <div *ngFor="let source of placedSources" 
+           class="health-item"
+           [class.critical]="source.health < 30"
+           [class.warning]="source.health >= 30 && source.health < 60"
+           [class.healthy]="source.health >= 60">
+        <div class="health-info">
+          <div class="health-header">
+            <span class="source-icon">{{ energySources[source.type].icon }}</span>
+            <span class="source-location">({{ source.x }},{{ source.z }})</span>
+            <span class="health-percent">{{ source.health | number:'1.0-0' }}%</span>
+          </div>
+          <div class="health-bar-container">
+            <div class="health-bar" 
+                 [style.width.%]="source.health"
+                 [style.background]="source.health < 30 ? '#ff0000' : source.health < 60 ? '#ffaa00' : '#00ff00'">
+            </div>
+          </div>
+          <div class="efficiency-text">
+            ⚡ Eficiencia: {{ (source.efficiency * 100) | number:'1.0-0' }}%
+          </div>
+        </div>
+        <button class="maintenance-btn"
+                [disabled]="money < energySources[source.type].maintenanceCost || source.health >= 95"
+                (click)="performMaintenance(source.x, source.z)"
+                [title]="source.health >= 95 ? 'No necesita mantenimiento' : 'Reparar al 100%'">
+          🔧 {{ energySources[source.type].maintenanceCost }}€
+        </button>
+      </div>
+    </div>
+    
+    <!-- 🆕 Resumen de salud general (CORREGIDO) -->
+    <div class="health-summary">
+      <div class="summary-item">
+        <span>🟢 Buenas:</span>
+        <span>{{ healthySources }}</span>
+      </div>
+      <div class="summary-item">
+        <span>🟡 Advertencia:</span>
+        <span>{{ warningSources }}</span>
+      </div>
+      <div class="summary-item critical-count">
+        <span>🔴 Críticas:</span>
+        <span>{{ criticalSources }}</span>
       </div>
     </div>
   </div>
@@ -85,7 +137,8 @@
   <div class="instructions-panel">
     <div class="instructions-title">🎮 CONTROLES</div>
     <div>• <span style="color: #ffff00;">Click</span>: Colocar fuente</div>
-    <div>• <span style="color: #ffff00;">Modo Cable</span>: Click en 2 fuentes para conectar</div>
+    <div>• <span style="color: #ffff00;">SHIFT + Click</span>: Mantenimiento 🆕</div>
+    <div>• <span style="color: #ffff00;">Modo Cable</span>: Click en 2 fuentes</div>
     <div>• <span style="color: #ffff00;">Mouse Wheel</span>: Zoom</div>
     <div>• <span style="color: #ffff00;">Click Medio/Der</span>: Mover cámara</div>
     
@@ -99,9 +152,24 @@
         <div><strong>☢️ Nuclear:</strong> Alto costo, producción constante</div>
       </div>
     </div>
+    
+    <!-- 🆕 Sección de nuevas mecánicas -->
+    <div style="margin-top: 12px; padding-top: 8px; border-top: 1px solid #ff6666;">
+      <div style="color: #ff6666; font-weight: bold; margin-bottom: 5px;">⚠️MECÁNICAS:</div>
+      <div style="font-size: 11px;">
+        <div><strong>🔧 Degradación:</strong> Las fuentes pierden salud</div>
+        <div><strong>⚡ Pérdida:</strong> Cables largos = menos energía</div>
+        <div><strong>🟢 Verde:</strong> Salud buena (60-100%)</div>
+        <div><strong>🟡 Amarillo:</strong> Necesita mantención (30-60%)</div>
+        <div><strong>🔴 Rojo:</strong> Crítico + humo (<30%)</div>
+        <div style="margin-top: 6px; color: #ffaa00;">
+          💡 Cables cortos = mayor eficiencia
+        </div>
+      </div>
+    </div>
   </div>
   
-  <!-- Indicador de acción actual -->
+  <!-- Indicador de acción actual (CORREGIDO) -->
   <div class="action-indicator" 
        [class.eraser-mode]="selectedSource === 'eraser'"
        [class.cable-mode]="selectedSource === 'cable'">
@@ -131,9 +199,50 @@
       </div>
     </div>
   </div>
+<<<<<<< HEAD
+
+  <!-- 🆕 Notificaciones flotantes (CORREGIDO) -->
+  <div class="notifications-container">
+    <!-- Alerta de fuente crítica -->
+    <div class="notification notification-critical" 
+         *ngIf="criticalSources > 0">
+      <span class="notification-icon">⚠️</span>
+      <div class="notification-content">
+        <strong>¡ALERTA CRÍTICA!</strong>
+        <div>{{ criticalSources }} fuente(s) en estado crítico</div>
+      </div>
+    </div>
+    
+    <!-- Alerta de cables ineficientes -->
+    <div class="notification notification-warning" 
+         *ngIf="powerLines.length > 0 && hasInefficientCables()">
+      <span class="notification-icon">📉</span>
+      <div class="notification-content">
+        <strong>Cables Ineficientes</strong>
+        <div>Algunos cables pierden mucha energía</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🆕 Tooltip de ayuda flotante -->
+  <div class="help-tooltip" *ngIf="placedSources.length === 0">
+    <div class="tooltip-arrow"></div>
+    <div class="tooltip-content">
+      <strong>👋 ¡Bienvenido!</strong>
+      <div>1. Selecciona una fuente de energía</div>
+      <div>2. Click en el mapa para construir</div>
+      <div>3. Usa cables 🔌 para conectar</div>
+      <div style="margin-top: 8px; color: #ffaa00;">
+        💡 Las fuentes se degradan con el tiempo
+      </div>
+    </div>
+  </div>
+</div>
+=======
   <div class="boton-volver-container">
     <button class="boton-volver" (click)="goToMenu()">
       ⬅ Volver a Niveles
     </button>
   </div>
 </div>
+
