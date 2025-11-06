@@ -31,7 +31,9 @@ Integrantes:
 - Zuri Alvarez
  Universidad del Caribe - 2025
 
-Proyecto: EcoPlan`;
+Proyecto: EcoPlan
+
+Fondo: @anasabdin`;
 
   constructor(private router: Router) {}
 

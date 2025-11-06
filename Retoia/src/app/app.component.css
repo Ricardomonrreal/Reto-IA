@@ -1,0 +1,32 @@
+.music-toggle {
+  /* Mantenemos el mismo método de posicionamiento (fixed) */
+  position: fixed; 
+  z-index: 1000;
+  
+  /* ALINEACIÓN VERTICAL: Coincide con 'bottom: 20px' del contenedor de niveles. */
+  bottom: 20px; 
+  
+  /* ALINEACIÓN HORIZONTAL: 
+     Calculado como: 20px (right del contenedor) + 216px (ancho del botón) + 10px (espacio) = 246px */
+  right: 246px; 
+  
+  /* Estilos visuales para que parezca un círculo alineado */
+  background-color: #4c6baf;
+  color: white;
+  border: none;
+  width: 40px; 
+  height: 40px;
+  padding: 0;
+  line-height: 40px;
+  text-align: center;
+  border-radius: 50%; 
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.3s;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.music-toggle:hover {
+  background-color: #4666db;
+  transform: scale(1.05);
+}

@@ -5,6 +5,8 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { Router } from '@angular/router';
 
+
+
 interface BuildingConfig {
   color: number;
   height: number;
@@ -64,7 +66,7 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
       'streetA', 'streetB', 'streetC', 'streetE', 'streetF', 'streetG', 'banqueta'
     ],
     'Decoración': [
-      'planter', 'arbolA', 'arbolC', 'arbolE', 'banca'
+      'planter', 'arbolA', 'arbolC', 'arbolE', 'banca', 'fuente', 'jardineraA', 'jardineraB', 'jardineraC'
     ]
   };
 
@@ -114,7 +116,11 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
     banca: { thumb: 'assets/thumbs/banca.png', name: 'Banca'},
     arbolA: { thumb: 'assets/thumbs/arbolA.png', name: 'Árbol A' },
     arbolC: { thumb: 'assets/thumbs/arbolC.png', name: 'Árbol B' },
-    arbolE: { thumb: 'assets/thumbs/arbolE.png', name: 'Árbol C' }
+    arbolE: { thumb: 'assets/thumbs/arbolE.png', name: 'Árbol C' },
+    fuente: { thumb: 'assets/thumbs/fuente.png', name: 'Fuente'},
+    jardineraA: { thumb: 'assets/thumbs/jardineraA.png', name: 'Jardinera Muro'},
+    jardineraB: { thumb: 'assets/thumbs/jardineraB.png', name: 'Jardinera Curva'},
+    jardineraC: { thumb: 'assets/thumbs/jardineraC.png', name: 'Jardinera Puerta'},
   };
 
   private gltfLoader = new GLTFLoader();
@@ -146,7 +152,7 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
   private readonly cellSize = 2;
   private gridData: (GridCell | null)[][] = [];
 
-  private buildingTypes: { [key: string]: BuildingConfig } = {
+  public buildingTypes: { [key: string]: BuildingConfig } = {
     // Edificios
     buildingA:  { color: 0, height: 1.5, scale: 2},
     buildingB:  { color: 0, height: 3, scale: 2},
@@ -188,15 +194,19 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
     casaI: { color: 0, height: 2, scale: 1.7},
 
     //Decoracion
-    arbolA: { color: 0, height: 2, scale: 1.3 },
-    arbolB: { color: 0, height: 2, scale: 1.3 },
-    arbolC: { color: 0, height: 2, scale: 1.3 },
-    arbolD: { color: 0, height: 2, scale: 1.3 },
-    arbolE: { color: 0, height: 2, scale: 1.3 },
-    planter: {color: 0, height: 5, scale: 4, greenAreaM2: 100},
-    banca: { color: 0, height: 2, scale: 1.2},
+    arbolA: { color: 0, height: 2, scale: 1.3, greenAreaM2: 100},
+    arbolB: { color: 0, height: 2, scale: 1.3, greenAreaM2: 100},
+    arbolC: { color: 0, height: 2, scale: 1.3, greenAreaM2: 100},
+    arbolD: { color: 0, height: 2, scale: 1.3, greenAreaM2: 100},
+    arbolE: { color: 0, height: 2, scale: 1.3, greenAreaM2: 100},
+    planter: {color: 0, height: 5, scale: 4, greenAreaM2: 20},
+    banca: { color: 0, height: 2, scale: 1.2, greenAreaM2: 100},
     bardaA: { color: 0, height: 2, scale: 2},
-    bardaB: { color: 0, height: 2, scale: 1.2}
+    bardaB: { color: 0, height: 2, scale: 1.2},
+    fuente: { color: 0, height: 2, scale: 3, greenAreaM2: 200},
+    jardineraA: { color: 0, height: 2, scale: 2, greenAreaM2: 100},
+    jardineraB: { color: 0, height: 2, scale: 2, greenAreaM2: 100},
+    jardineraC: { color: 0, height: 2, scale: 2, greenAreaM2: 100 },
   };
 
   private initialBuildings: { type: string, x: number, z: number, rotationY?: number }[] = [
@@ -1054,7 +1064,7 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
     { type: 'buildingK', x: 32, z: 34, rotationY: Math.PI / 2 },
 ];  
 
-  private buildingCosts: { [key: string]: number } = {
+  public buildingCosts: { [key: string]: number } = {
     // Edificios (Costo 0)
     buildingA: 0, buildingB: 0, buildingC: 0, buildingD: 0, buildingE: 0, 
     buildingF: 0, buildingG: 0, buildingH: 0, buildingI: 0, buildingJ: 0, 
@@ -1070,10 +1080,10 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
 
     // Decoración (Con Costo y Limitado)
     arbolA: 100, arbolB: 100, arbolC: 100, arbolD: 100, arbolE: 100, 
-    planter: 300, banca: 50
+    planter: 50, banca: 50, fuente: 1000, jardineraA: 200, jardineraB: 200, jardineraC: 200
   };
 
-  private buildingLimits: { [key: string]: number } = {
+  public buildingLimits: { [key: string]: number } = {
     arbolA: 5, arbolC: 5, arbolE: 5, planter: 5, banca: 10,
   };
 
@@ -1092,7 +1102,7 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
     }
   }
 
-  private createInitialBuildings(): void {
+private createInitialBuildings(): void {
     this.initialBuildings.forEach(building => {
       const { type, x: anchorX, z: anchorZ, rotationY } = building;
       // Verificar si la celda está vacía antes de construir
@@ -1134,7 +1144,7 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
     });
   }
 
-  private calculatePopulationAndGreenArea(): void {
+private calculatePopulationAndGreenArea(): void {
     // Configuración de la lógica de población
     const GREEN_AREA_PER_CAPITA = 9; // 9m² por habitante
 
@@ -1162,62 +1172,6 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
     this.totalGreenAreaM2 = newTotalGreenAreaM2;
     this.requiredGreenAreaM2 = newTotalInhabitants * GREEN_AREA_PER_CAPITA;
     this.greenAreaDeficit = this.totalGreenAreaM2 - this.requiredGreenAreaM2;
-  }
-
-  private exportCityData(): void {
-    let exportString = "private initialBuildings: { type: string, x: number, z: number, rotationY?: number }[] = [\n";
-    let buildingCount = 0;
-
-    for (let x = 0; x < this.gridSize; x++) {
-      for (let z = 0; z < this.gridSize; z++) {
-        const cellData = this.gridData[x][z];
-
-        if (cellData) {
-          // Solo exportamos si el edificio fue colocado por el usuario (isPermanent: false)
-          // o si queremos exportar toda la ciudad. Para simplificar la copia, incluiremos
-          // la glorieta y calles iniciales si quieres regenerar TODO el nivel.
-
-          // NOTA: Para no exportar el 3x3 de la glorieta 9 veces, solo exportamos la celda ancla.
-          if (cellData.anchorX !== x || cellData.anchorZ !== z) {
-            // Si no es la celda de anclaje (es una celda adyacente de un 3x3), la ignoramos.
-            continue;
-          }
-
-          const type = cellData.type;
-          const rotation = cellData.rotationY || 0;
-          
-          // Formatear la rotación para TypeScript
-          let rotationString: string;
-          if (rotation === 0) {
-            rotationString = '0';
-          } else if (rotation > 0.01 && rotation < 1.6) { // ~ Math.PI / 2
-            rotationString = 'Math.PI / 2';
-          } else if (rotation > 3.1 && rotation < 3.2) { // ~ Math.PI
-            rotationString = 'Math.PI';
-          } else if (rotation > 4.7 && rotation < 4.8) { // ~ 3 * Math.PI / 2
-            rotationString = '3 * Math.PI / 2';
-          } else {
-            rotationString = rotation.toFixed(4).toString(); // Fallback
-          }
-
-          exportString += `    { type: '${type}', x: ${x}, z: ${z}, rotationY: ${rotationString} },\n`;
-          buildingCount++;
-        }
-      }
-    }
-
-    exportString += "];";
-
-    console.log(`--- EXPORTACIÓN DE CELDAS (${buildingCount} edificios) ---`);
-    console.log(exportString);
-    console.log('--- FIN EXPORTACIÓN ---');
-
-    // Opcional: Copiar al portapapeles directamente
-    navigator.clipboard.writeText(exportString).then(() => {
-      console.log('Datos de la ciudad copiados al portapapeles.');
-    }).catch(err => {
-      console.error('Error al copiar al portapapeles:', err);
-    });
   }
 
   ngOnInit(): void {
@@ -1440,9 +1394,11 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
       case 'banca': modelUrl = 'assets/decoracion/banca.glb'; break;
       case 'bardaA': modelUrl = 'assets/decoracion/bardaA.glb'; break;
       case 'bardaB': modelUrl = 'assets/decoracion/bardaB.glb'; break;
-
+      case 'fuente': modelUrl = 'assets/decoracion/fuente.glb'; break;
       case 'planter': modelUrl = 'assets/casas/planter.glb'; break;
-
+      case 'jardineraA': modelUrl = 'assets/decoracion/jardineraA.glb'; break;
+      case 'jardineraB': modelUrl = 'assets/decoracion/jardineraB.glb'; break;
+      case 'jardineraC': modelUrl = 'assets/decoracion/jardineraC.glb'; break;
     }
 
     this.loadBuildingModel(modelUrl, (model) => {
@@ -1536,6 +1492,10 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
         case 'banca': modelUrl = 'assets/decoracion/banca.glb'; break;
         case 'bardaA': modelUrl = 'assets/decoracion/bardaA.glb'; break;
         case 'bardaB': modelUrl = 'assets/decoracion/bardaB.glb'; break;
+        case 'fuente': modelUrl = 'assets/decoracion/fuente.glb'; break;
+        case 'jardineraA': modelUrl = 'assets/decoracion/jardineraA.glb'; break;
+        case 'jardineraB': modelUrl = 'assets/decoracion/jardineraB.glb'; break;
+        case 'jardineraC': modelUrl = 'assets/decoracion/jardineraC.glb'; break;
       }
 
       if (modelUrl) {
@@ -1846,11 +1806,6 @@ export class CityBuilderComponent implements OnInit, OnDestroy {
     // Delete or Backspace key to activate eraser
     if (event.key === 'Delete' || event.key === 'Backspace') {
       this.selectedBuilding = 'eraser';
-    }
-
-    if (event.key === 'e' || event.key === 'E') {
-        this.exportCityData();
-        return; 
     }
 
     // Number keys 1-4 to select buildings quickly

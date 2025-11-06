@@ -35,17 +35,37 @@
         <div class="building-list-container">
             <ng-container *ngFor="let buildingKey of buildingCategories[selectedCategory]">
                 <ng-container *ngIf="buildingUIData[buildingKey] as building">
-                    <button
-                        (click)="selectBuilding(buildingKey)"
-                        [class.selected]="selectedBuilding === buildingKey"
-                        class="building-btn"
-                    >
-                        <img [src]="building.thumb" 
-                            alt="{{ building.name }}" 
-                            class="building-thumbnail"> 
-                        
-                        <span class="building-name">{{ building.name }}</span>
-                    </button>
+                    <ng-container *ngIf="{ 
+                        cost: buildingCosts[buildingKey], 
+                        typeConfig: buildingTypes[buildingKey] 
+                    } as buildingData">
+                        <button
+                            (click)="selectBuilding(buildingKey)"
+                            [class.selected]="selectedBuilding === buildingKey"
+                            class="building-btn"
+                        >
+                            <img [src]="building.thumb" 
+                                alt="{{ building.name }}" 
+                                class="building-thumbnail"> 
+                            
+                            <span class="building-name">{{ building.name }}</span>
+
+                            <span class="building-info" 
+                                *ngIf="selectedCategory === 'Decoración'">
+                                <span class="cost-info">
+                                    <strong>Costo:</strong> ${{ buildingData.cost | number: '1.0-0' }}
+                                </span><br>
+                                <span class="green-area-info" 
+                                    *ngIf="buildingData.typeConfig?.greenAreaM2">
+                                    <strong>Área Verde:</strong> {{ buildingData.typeConfig.greenAreaM2 }} m²
+                                </span>
+                                <span class="limit-info" 
+                                    *ngIf="buildingLimits[buildingKey]">
+                                    <strong>Límite:</strong> {{ buildingLimits[buildingKey] }}
+                                </span>
+                            </span>
+                            </button>
+                    </ng-container>
                 </ng-container>
             </ng-container>
         </div>
@@ -84,11 +104,11 @@
                 ✅ Objetivo de Transporte Cumplido.
             </div>
             <div *ngIf="!transportPublicoCompletado" class="validation-message alert">
-                ⚠️ ¡Necesitas más bancas para la ruta!
+                ⚠️ ¡NECESITAS MÁS PARADEROS!
             </div>
             <hr>
 
-            <h3>Estadísticas de la Ciudad</h3>
+            <h4>Estadísticas de la Ciudad</h4>
             <p>
                 <strong>Habitantes:</strong> {{ totalInhabitants }}
             </p>
@@ -115,10 +135,10 @@
                 ✅ Área Verde Suficiente.
             </div>
         </div>
+        <div class="boton-volver-container">
+            <button class="boton-volver" (click)="goToMenu()">
+            ⬅ Volver a Niveles
+            </button>
+        </div>
     </div>
-    <div class="boton-volver-container">
-    <button class="boton-volver" (click)="goToMenu()">
-      ⬅ Volver a Niveles
-    </button>
-  </div>
 </body>
