@@ -92,31 +92,31 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
   };
 
   // 🆕 Tipos de mantenimiento disponibles
-  maintenanceTypes: { [key: string]: MaintenanceType } = {
-    basic: {
-      name: 'Básico',
-      icon: '🔧',
-      healthRestore: 50,
-      costMultiplier: 0.5,
-      duration: 2000
-    },
-    standard: {
-      name: 'Estándar',
-      icon: '⚙️',
-      healthRestore: 100,
-      costMultiplier: 1.0,
-      duration: 3000
-    },
-    premium: {
-      name: 'Premium',
-      icon: '✨',
-      healthRestore: 100,
-      costMultiplier: 1.5,
-      duration: 4000,
-      bonusEfficiency: 0.1
-    }
-  };
-
+  // 🆕 Tipos de mantenimiento disponibles
+maintenanceTypes: Record<'basic' | 'standard' | 'premium', MaintenanceType> = {
+  basic: {
+    name: 'Básico',
+    icon: '🔧',
+    healthRestore: 50,
+    costMultiplier: 0.5,
+    duration: 2000
+  },
+  standard: {
+    name: 'Estándar',
+    icon: '⚙️',
+    healthRestore: 100,
+    costMultiplier: 1.0,
+    duration: 3000
+  },
+  premium: {
+    name: 'Premium',
+    icon: '✨',
+    healthRestore: 100,
+    costMultiplier: 1.5,
+    duration: 4000,
+    bonusEfficiency: 0.1
+  }
+};
   // ===== THREE.JS =====
   private gltfLoader = new GLTFLoader();
   private scene!: THREE.Scene;
@@ -264,21 +264,27 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
     this.renderer?.dispose();
   }
 
-  // 🆕 Método para seleccionar tipo de mantenimiento
-  selectMaintenanceType(type: 'basic' | 'standard' | 'premium'): void {
-    this.selectedMaintenanceType = type;
-    this.isConnecting = false;
-    this.selectedSource = 'maintenance';
-    this.connectionStart = null;
-  }
+// 🆕 Método para seleccionar tipo de mantenimiento
+selectMaintenanceType(type: 'basic' | 'standard' | 'premium'): void {
+  this.selectedMaintenanceType = type;
+  this.isConnecting = false;
+  this.selectedSource = 'maintenance';
+  this.connectionStart = null;
+}
 
-  // 🆕 Método para calcular costo de mantenimiento
-  getMaintenanceCost(sourceType: string, maintenanceType: string): number {
-    const source = this.energySources[sourceType];
-    const maintenance = this.maintenanceTypes[maintenanceType];
-    return Math.round(source.maintenanceCost * maintenance.costMultiplier);
+// 🆕 Método auxiliar para casting seguro desde el template
+selectMaintenanceTypeFromString(type: string): void {
+  if (type === 'basic' || type === 'standard' || type === 'premium') {
+    this.selectMaintenanceType(type);
   }
+}
 
+// 🆕 Método para calcular costo de mantenimiento
+getMaintenanceCost(sourceType: string, maintenanceType: 'basic' | 'standard' | 'premium'): number {
+  const source = this.energySources[sourceType];
+  const maintenance = this.maintenanceTypes[maintenanceType];
+  return Math.round(source.maintenanceCost * maintenance.costMultiplier);
+}
   // ===== NUBES =====
   private createClouds(): void {
     for (let i = 0; i < this.cloudCount; i++) {
@@ -984,13 +990,13 @@ export class EnergyGridComponent implements OnInit, OnDestroy {
   }
 
   // 🆕 Función actualizada de mantenimiento con tipos
-  performMaintenance(x: number, z: number, maintenanceType: string): void {
-    const source = this.placedSources.find(s => s.x === x && s.z === z);
-    if (!source) return;
-    
-    const sourceConfig = this.energySources[source.type];
-    const maintenance = this.maintenanceTypes[maintenanceType];
-    const cost = this.getMaintenanceCost(source.type, maintenanceType);
+  performMaintenance(x: number, z: number, maintenanceType: 'basic' | 'standard' | 'premium'): void {
+  const source = this.placedSources.find(s => s.x === x && s.z === z);
+  if (!source) return;
+  
+  const sourceConfig = this.energySources[source.type];
+  const maintenance = this.maintenanceTypes[maintenanceType];
+  const cost = this.getMaintenanceCost(source.type, maintenanceType);
     
     // Verificar dinero
     if (this.money < cost) {
