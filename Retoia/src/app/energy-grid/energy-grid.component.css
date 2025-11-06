@@ -117,7 +117,6 @@
   margin-bottom: 15px;
   border-radius: 4px;
 }
-
 /* === ESTADÍSTICAS === */
 .energy-stats {
   background: rgba(51, 51, 51, 0.8);
@@ -347,11 +346,12 @@
   margin-bottom: 3px;
 }
 
-/* === PANEL DE SALUD === */
+/* === PANEL DE SALUD CENTRADO === */
 .health-panel {
   position: absolute;
-  top: 20px;
-  right: 290px;
+  top: 15%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   background: #222;
   border: 2px solid #ff6666;
   border-radius: 8px;
@@ -362,6 +362,7 @@
   box-shadow: 0 0 20px rgba(255, 102, 102, 0.2);
   z-index: 10;
 }
+
 
 .panel-title {
   font-size: 16px;
@@ -924,18 +925,16 @@
 
 .game-over-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  inset: 0;
   background: rgba(0, 0, 0, 0.95);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 9999;
-  animation: fadeInOverlay 0.5s ease-out;
   backdrop-filter: blur(10px);
+  animation: fadeInOverlay 0.5s ease-out;
+  z-index: 9999;
 }
+
 
 @keyframes fadeInOverlay {
   from {
@@ -950,14 +949,27 @@
   background: linear-gradient(135deg, #1a0000 0%, #330000 50%, #1a0000 100%);
   border: 4px solid #ff0000;
   border-radius: 20px;
-  padding: 40px;
-  max-width: 600px;
-  width: 90%;
+  padding: 20px 30px;
+  max-width: 400px;
+  width: 85%;
   text-align: center;
   box-shadow: 0 0 50px rgba(255, 0, 0, 0.8),
               inset 0 0 30px rgba(255, 0, 0, 0.2);
   animation: bannerAppear 0.8s ease-out;
   font-family: 'bits', monospace;
+  
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  max-height: 90vh;
+  overflow-y: auto;
+  margin: 20px;
+  box-sizing: border-box;
+  
+  /* Estilos del scrollbar */
+  scrollbar-width: thin; /* Para Firefox */
+  scrollbar-color: #ff0000 #330000; /* barra y fondo para Firefox */
 }
 
 @keyframes bannerAppear {
@@ -1651,4 +1663,284 @@ button:focus-visible,
 ::-moz-selection {
   background: #599cb7;
   color: #e8ffdb;
+}
+
+/*PANEL DE GANADOR*/
+/* ========================================
+   🏆 VICTORY BANNER
+   ======================================== */
+
+.victory-banner {
+  background: linear-gradient(135deg, #0a1a0a 0%, #1a3a1a 50%, #0a1a0a 100%);
+  border: 4px solid #00ff66;
+  border-radius: 20px;
+  padding: 20px 30px;
+  max-width: 400px;
+  width: 85%;
+  text-align: center;
+  box-shadow: 0 0 50px rgba(0, 255, 102, 0.8),
+              inset 0 0 30px rgba(232, 255, 219, 0.2);
+  animation: victoryAppear 0.8s ease-out;
+  font-family: 'bits', monospace;
+  
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  max-height: 90vh;
+  overflow-y: auto;
+  margin: 20px;
+  box-sizing: border-box;
+  
+  /* Estilos del scrollbar */
+  scrollbar-width: thin;
+  scrollbar-color: #599cb7 #1a3a1a;
+}
+
+/* Scrollbar para Chrome, Safari, Edge */
+.victory-banner::-webkit-scrollbar {
+  width: 10px;
+}
+
+.victory-banner::-webkit-scrollbar-track {
+  background: #0a1a0a;
+  border-radius: 10px;
+}
+
+.victory-banner::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #599cb7 0%, #e8ffdb 100%);
+  border-radius: 10px;
+  border: 2px solid #0a1a0a;
+}
+
+.victory-banner::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #6db3d4 0%, #f0ffd9 100%);
+  box-shadow: 0 0 8px rgba(89, 156, 183, 0.5);
+}
+
+@keyframes victoryAppear {
+  from {
+    transform: translate(-50%, -50%) scale(0.5) rotate(5deg);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, -50%) scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+.victory-trophy {
+  font-size: 80px;
+  margin-bottom: 20px;
+  animation: trophyFloat 2s infinite ease-in-out;
+  filter: drop-shadow(0 0 20px rgba(0, 255, 102, 0.8));
+}
+
+@keyframes trophyFloat {
+  0%, 100% {
+    transform: translateY(0) rotate(-3deg);
+  }
+  50% {
+    transform: translateY(-15px) rotate(3deg);
+  }
+}
+
+.victory-title {
+  font-size: 48px;
+  color: #00ff66;
+  font-weight: bold;
+  margin-bottom: 10px;
+  text-shadow: 0 0 20px rgba(0, 255, 102, 0.8),
+               0 0 40px rgba(0, 255, 102, 0.6);
+  animation: victoryPulse 2s infinite;
+  letter-spacing: 5px;
+}
+
+@keyframes victoryPulse {
+  0%, 100% {
+    text-shadow: 0 0 20px rgba(0, 255, 102, 0.8),
+                 0 0 40px rgba(0, 255, 102, 0.6);
+  }
+  50% {
+    text-shadow: 0 0 30px rgba(0, 255, 102, 1),
+                 0 0 60px rgba(0, 255, 102, 0.8);
+  }
+}
+
+.victory-subtitle {
+  font-size: 20px;
+  color: #e8ffdb;
+  margin-bottom: 30px;
+  letter-spacing: 3px;
+}
+
+.victory-message {
+  background: rgba(0, 255, 102, 0.1);
+  border: 2px solid #00ff66;
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 30px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.victory-icon {
+  font-size: 40px;
+  animation: starSparkle 1s infinite alternate;
+}
+
+@keyframes starSparkle {
+  from {
+    transform: scale(1) rotate(0deg);
+    filter: brightness(1);
+  }
+  to {
+    transform: scale(1.2) rotate(15deg);
+    filter: brightness(1.5);
+  }
+}
+
+.victory-text {
+  color: #e8ffdb;
+  font-size: 16px;
+  text-align: left;
+  flex: 1;
+  line-height: 1.5;
+}
+
+.victory-stats {
+  background: rgba(0, 0, 0, 0.5);
+  border: 2px solid #599cb7;
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 25px;
+}
+
+.victory-stat-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  font-size: 16px;
+  align-items: center;
+}
+
+.victory-stat-item:last-child {
+  margin-bottom: 0;
+}
+
+.victory-stat-label {
+  color: #e8ffdb;
+  text-align: left;
+}
+
+.victory-stat-value {
+  color: #00ff66;
+  font-weight: bold;
+  text-align: right;
+  text-shadow: 0 0 10px rgba(0, 255, 102, 0.5);
+}
+
+.victory-bonus {
+  background: rgba(255, 255, 78, 0.1);
+  border: 2px solid #ffff4e;
+  border-radius: 10px;
+  padding: 15px;
+  margin-bottom: 30px;
+}
+
+.bonus-title {
+  color: #ffff4e;
+  font-weight: bold;
+  margin-bottom: 8px;
+  font-size: 16px;
+}
+
+.bonus-text {
+  color: #e8ffdb;
+  font-size: 14px;
+  line-height: 1.6;
+  text-align: left;
+}
+
+.victory-actions {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.btn-main-menu {
+  padding: 15px 30px;
+  font-size: 18px;
+  font-weight: bold;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: 'bits', monospace;
+  transition: all 0.3s;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  min-width: 250px;
+  background: linear-gradient(135deg, #599cb7 0%, #3a7a91 100%);
+  color: #e8ffdb;
+  border: 3px solid #599cb7;
+  box-shadow: 0 0 20px rgba(89, 156, 183, 0.5);
+}
+
+.btn-main-menu:hover {
+  background: linear-gradient(135deg, #6db3d4 0%, #4a8aa8 100%);
+  transform: scale(1.05) translateY(-2px);
+  box-shadow: 0 0 30px rgba(89, 156, 183, 0.8);
+}
+
+.btn-main-menu:active {
+  transform: scale(0.98) translateY(0);
+}
+
+/* ========================================
+   📱 RESPONSIVE DESIGN - VICTORY
+   ======================================== */
+
+@media (max-width: 768px) {
+  .victory-banner {
+    padding: 30px 20px;
+  }
+  
+  .victory-title {
+    font-size: 36px;
+  }
+  
+  .victory-subtitle {
+    font-size: 16px;
+  }
+  
+  .victory-trophy {
+    font-size: 60px;
+  }
+  
+  .victory-message {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .victory-icon {
+    font-size: 50px;
+  }
+  
+  .victory-text {
+    text-align: center;
+  }
+  
+  .victory-stats {
+    padding: 15px;
+  }
+  
+  .victory-stat-item {
+    font-size: 14px;
+  }
+  
+  .btn-main-menu {
+    width: 100%;
+  }
 }

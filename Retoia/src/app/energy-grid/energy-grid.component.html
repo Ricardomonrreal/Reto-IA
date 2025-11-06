@@ -1,7 +1,7 @@
 <div class="game-container">
   <div #renderCanvas class="canvas-container"></div>
   
-  <!-- ✅ NUEVO: Game Over Overlay -->
+  <!-- ✅ Game Over Overlay -->
   <div class="game-over-overlay" *ngIf="gameOver">
     <div class="game-over-banner">
       <div class="game-over-skull">💀</div>
@@ -45,16 +45,71 @@
       </div>
       
       <div class="game-over-actions">
-        <button class="btn-restart" (click)="restartGame()">
-          🔄 REINTENTAR
-        </button>
         <button class="btn-menu" (click)="goToMenu()">
           🏠 MENÚ PRINCIPAL
         </button>
       </div>
     </div>
   </div>
-  
+
+<!-- ✅ WIN Overlay -->
+<div class="game-over-overlay" *ngIf="gameWon">
+  <div class="victory-banner">
+    <div class="victory-trophy">🏆</div>
+    <div class="victory-title">¡VICTORIA!</div>
+    <div class="victory-subtitle">Red Eléctrica Estable</div>
+    
+    <div class="victory-message">
+      <div class="victory-icon">⚡</div>
+      <div class="victory-text">
+        ¡Excelente trabajo! Has logrado conectar {{ connectedHousesCount }} casas 
+        con una red eléctrica estable. Has demostrado ser un experto en gestión 
+        de energía limpia.
+      </div>
+    </div>
+    
+    <div class="victory-stats">
+      <div class="victory-stat-item">
+        <span class="victory-stat-label">💰 Dinero Final:</span>
+        <span class="victory-stat-value">{{ money | number:'1.0-2' }}€</span>
+      </div>
+      <div class="victory-stat-item">
+        <span class="victory-stat-label">⚡ Producción Total:</span>
+        <span class="victory-stat-value">{{ totalProduction | number:'1.0-0' }} kW</span>
+      </div>
+      <div class="victory-stat-item">
+        <span class="victory-stat-label">🏠 Casas Conectadas:</span>
+        <span class="victory-stat-value">{{ connectedHousesCount }}/{{ consumers.length }}</span>
+      </div>
+      <div class="victory-stat-item">
+        <span class="victory-stat-label">🔧 Fuentes Activas:</span>
+        <span class="victory-stat-value">{{ placedSources.length }}</span>
+      </div>
+      <div class="victory-stat-item">
+        <span class="victory-stat-label">♻️ Eficiencia:</span>
+        <span class="victory-stat-value">{{ efficiencyPercent }}%</span>
+      </div>
+      <div class="victory-stat-item">
+        <span class="victory-stat-label">🌍 Emisiones:</span>
+        <span class="victory-stat-value">{{ totalEmissions | number:'1.0-0' }} kg CO2/h</span>
+      </div>
+    </div>
+    
+    <div class="victory-bonus">
+      <div class="bonus-title">🌟 LOGRO DESBLOQUEADO:</div>
+      <div class="bonus-text">
+        "Red Estable" - Has conectado exitosamente al menos 3 casas con energía limpia. 
+        ¡La ciudad confía en tu gestión!
+      </div>
+    </div>
+    
+    <div class="victory-actions">
+      <button class="btn-main-menu" (click)="goToMenu()">
+        🏠 MENÚ PRINCIPAL
+      </button>
+    </div>
+  </div>
+</div>
   <!-- Panel de Control Principal -->
   <div class="ui-panel">
     <div class="title">⚡ RED DE ENERGÍA LIMPIA</div>
@@ -146,58 +201,14 @@
     
     <div class="instructions-bottom">
       <div style="color: #ffff00; margin-bottom: 5px;">💡 OBJETIVO:</div>
-      <div>• Cubrir demanda energética</div>
-      <div>• Usar solo renovables (0 CO2)</div>
-      <div>• Conectar red eléctrica</div>
-      <div>• Mantener fuentes en buen estado</div>
+      <div>• Conectar todas las casas</div>
+      <div>• Mantener fuentes saludables</div>
+      <div>• No quedarte sin dinero</div>
       <div style="margin-top: 8px; border-top: 1px solid #00ff00; padding-top: 8px;">
         <strong>Uso:</strong> Selecciona tipo de mantenimiento → Click en fuente
       </div>
     </div>
   </div>
-  
-  <!-- Tabla de Costos de Mantenimiento -->
-  <div class="maintenance-cost-table">
-    <div class="table-title">💰 TABLA DE COSTOS DE MANTENIMIENTO</div>
-    
-    <div class="cost-table">
-      <div class="table-header">
-        <div class="col-source">FUENTE</div>
-        <div class="col-basic">🔧 BÁSICO</div>
-        <div class="col-standard">⚙️ ESTÁNDAR</div>
-        <div class="col-premium">✨ PREMIUM</div>
-      </div>
-      
-      <div class="table-row" *ngFor="let source of energySources | keyvalue">
-        <div class="col-source">
-          <span class="source-icon">{{ source.value.icon }}</span>
-          <span>{{ source.value.name }}</span>
-        </div>
-        <div class="col-basic">
-          {{ getMaintenanceCost(source.key, 'basic') }}€
-          <div class="restore-info">+50% (2s)</div>
-        </div>
-        <div class="col-standard">
-          {{ getMaintenanceCost(source.key, 'standard') }}€
-          <div class="restore-info">+100% (3s)</div>
-        </div>
-        <div class="col-premium">
-          {{ getMaintenanceCost(source.key, 'premium') }}€
-          <div class="restore-info bonus">+100% +10%⚡ (4s)</div>
-        </div>
-      </div>
-    </div>
-    
-    <div class="table-legend">
-      <div><strong>🔧 Básico:</strong> Rápido y barato (50% salud)</div>
-      <div><strong>⚙️ Estándar:</strong> Restauración completa (100%)</div>
-      <div><strong>✨ Premium:</strong> Completo + bonus eficiencia 30s</div>
-      <div style="margin-top: 8px; color: #ffaa00;">
-        💡 Producción = 0 durante mantenimiento
-      </div>
-    </div>
-  </div>
-  
   <!-- Panel de Salud de Fuentes -->
   <div class="health-panel" *ngIf="placedSources.length > 0">
     <div class="panel-title">🔧 ESTADO DE FUENTES</div>
@@ -416,7 +427,7 @@
   </div>
 
   <!-- Tooltip de ayuda flotante -->
-  <div class="help-tooltip" *ngIf="placedSources.length === 0 && !gameOver">
+  <div class="help-tooltip" *ngIf="placedSources.length === 0 && !gameOver && !gameWon">
     <div class="tooltip-arrow"></div>
     <div class="tooltip-content">
       <strong>👋 ¡Bienvenido!</strong>

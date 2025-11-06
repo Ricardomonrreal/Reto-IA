@@ -75,7 +75,11 @@ export class EnergyGridComponent implements OnInit, OnDestroy, AfterViewInit {
   private isOverUI = false;
   gameOver = false;
   gameOverReason = '';
-  
+  gameWon = false;
+
+  get connectedHousesCount(): number {
+  return this.consumers.filter(c => c.connected).length;
+}
   goToMenu() {
     this.router.navigate(['/niveles']);
   }
@@ -134,14 +138,17 @@ export class EnergyGridComponent implements OnInit, OnDestroy, AfterViewInit {
   private linesGroup = new THREE.Group();
   private hoverPreview: THREE.Mesh | null = null;
   private animationId?: number;
+  private loadedModels: THREE.Object3D[] = [];
+  private labels = new Map<string, THREE.Sprite>();
+  private sourceModels = new Map<string, THREE.Object3D>();
 
   // ===== CONFIGURACIÓN =====
   private readonly gridSize = 30;
   private readonly cellSize = 2;
   private gridData: (string | null)[][] = [];
-  private consumers: Consumer[] = [];
+  consumers: Consumer[] = [];
   powerLines: PowerLine[] = [];
-  private clouds: THREE.Object3D[] = [];
+  private clouds: THREE.Group[] = [];
   private cloudCount = 50;
   private cloudSpeed = 0.02;
 
@@ -169,6 +176,10 @@ export class EnergyGridComponent implements OnInit, OnDestroy, AfterViewInit {
 
   get sourcesWithBonus(): number {
     return this.placedSources.filter(s => s.bonusEfficiency && !s.isUnderMaintenance).length;
+  }
+
+  get allConsumersConnected(): boolean {
+    return this.consumers.length > 0 && this.consumers.every(c => c.connected);
   }
 
   private readonly degradationInterval = 1000;
@@ -250,6 +261,11 @@ export class EnergyGridComponent implements OnInit, OnDestroy, AfterViewInit {
   private readonly moneyChangeRate = 0.01;
 
   ngOnInit(): void {
+
+    this.placedSources = [];
+    this.sourceModels.clear();
+    this.powerLines = [];
+
     this.initGrid();
     this.initScene();
     this.createGround();
@@ -257,19 +273,102 @@ export class EnergyGridComponent implements OnInit, OnDestroy, AfterViewInit {
     this.createConsumers();
     this.updateNetworkState();
     this.animate();
+    this.ngAfterViewInit();
+  }
+
+ ngAfterViewInit(): void {
+  this.preventUIEventPropagation();
+  this.setupScrollIndicator();
+  
+  // ✅ AGREGAR ESTAS LÍNEAS:
+  // Retrasar event listeners para evitar clicks del menú
+  setTimeout(() => {
     this.addEventListeners();
-  }
-
-  // ✅ MEJORA: Mover lógica de UI a AfterViewInit
-  ngAfterViewInit(): void {
-    this.preventUIEventPropagation();
-    this.setupScrollIndicator();
-  }
-
+  }, 300); // 300ms de delay
+}
   ngOnDestroy(): void {
     this.removeEventListeners();
     if (this.animationId) cancelAnimationFrame(this.animationId);
+    
+    // Limpiar modelos cargados
+    this.loadedModels.forEach(model => {
+      model.traverse((child) => {
+        if (child instanceof THREE.Mesh) {
+          child.geometry.dispose();
+          if (Array.isArray(child.material)) {
+            child.material.forEach(mat => this.disposeMaterial(mat));
+          } else {
+            this.disposeMaterial(child.material);
+          }
+        }
+      });
+    });
+    
+    // Limpiar grupos
+    this.cleanupGroup(this.groundGroup);
+    this.cleanupGroup(this.sourcesGroup);
+    this.cleanupGroup(this.consumersGroup);
+    this.cleanupGroup(this.linesGroup);
+    
+    // Limpiar labels
+    this.labels.forEach(sprite => {
+      sprite.material.map?.dispose();
+      sprite.material.dispose();
+    });
+    this.labels.clear();
+    
+    // Limpiar nubes
+    this.clouds.forEach(cloud => {
+      cloud.traverse((child) => {
+        if (child instanceof THREE.Mesh) {
+          child.geometry.dispose();
+          if (Array.isArray(child.material)) {
+            child.material.forEach(mat => this.disposeMaterial(mat));
+          } else {
+            this.disposeMaterial(child.material);
+          }
+        }
+      });
+    });
+    
     this.renderer?.dispose();
+  }
+
+  private disposeMaterial(material: THREE.Material): void {
+    const mat = material as any;
+    if (mat.map) mat.map.dispose();
+    if (mat.lightMap) mat.lightMap.dispose();
+    if (mat.bumpMap) mat.bumpMap.dispose();
+    if (mat.normalMap) mat.normalMap.dispose();
+    if (mat.specularMap) mat.specularMap.dispose();
+    if (mat.envMap) mat.envMap.dispose();
+    material.dispose();
+  }
+
+  private cleanupGroup(group: THREE.Group): void {
+    const objectsToRemove = [...group.children];
+    
+    objectsToRemove.forEach(obj => {
+      obj.traverse((child) => {
+        if (child instanceof THREE.Mesh) {
+          child.geometry.dispose();
+          if (Array.isArray(child.material)) {
+            child.material.forEach(mat => this.disposeMaterial(mat));
+          } else {
+            this.disposeMaterial(child.material);
+          }
+        }
+        if (child instanceof THREE.Sprite) {
+          child.material.map?.dispose();
+          child.material.dispose();
+        }
+        if (child instanceof THREE.Line) {
+          child.geometry.dispose();
+          (child.material as THREE.Material).dispose();
+        }
+      });
+      group.remove(obj);
+    });
   }
 
   selectMaintenanceType(type: 'basic' | 'standard' | 'premium'): void {
@@ -460,6 +559,7 @@ export class EnergyGridComponent implements OnInit, OnDestroy, AfterViewInit {
         randomModel,
         (gltf) => {
           const house = gltf.scene;
+          this.loadedModels.push(house);
           
           house.scale.set(1.5, 1.5, 1.5);
           
@@ -496,12 +596,12 @@ export class EnergyGridComponent implements OnInit, OnDestroy, AfterViewInit {
 
     this.updateStats();
   }
-
 private createLabel(x: number, z: number, text: string, color: number): void {
     const canvas = document.createElement('canvas');
     canvas.width = 128;
     canvas.height = 64;
-    const ctx = canvas.getContext('2d')!;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
     
     ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
     ctx.fillRect(0, 0, 128, 64);
@@ -521,7 +621,20 @@ private createLabel(x: number, z: number, text: string, color: number): void {
     );
     sprite.scale.set(2, 1, 1);
     
+    const key = `${x},${z}`;
+    this.labels.set(key, sprite);
     this.consumersGroup.add(sprite);
+  }
+
+  private removeLabel(x: number, z: number): void {
+    const key = `${x},${z}`;
+    const sprite = this.labels.get(key);
+    if (sprite) {
+      sprite.material.map?.dispose();
+      sprite.material.dispose();
+      this.consumersGroup.remove(sprite);
+      this.labels.delete(key);
+    }
   }
 
   private createSource3D(type: string, x: number, z: number): void {
@@ -538,6 +651,7 @@ private createLabel(x: number, z: number, text: string, color: number): void {
       modelUrl,
       (gltf) => {
         const model = gltf.scene;
+        this.loadedModels.push(model);
         
         const scales: { [key: string]: number } = {
           solar: 1.2,
@@ -570,6 +684,9 @@ private createLabel(x: number, z: number, text: string, color: number): void {
         });
 
         model.userData = { gridX: x, gridZ: z, type };
+        
+        const key = `${x},${z}`;
+        this.sourceModels.set(key, model);
         this.sourcesGroup.add(model);
       },
       undefined,
@@ -607,6 +724,9 @@ private createLabel(x: number, z: number, text: string, color: number): void {
     
     mesh.castShadow = true;
     mesh.userData = { gridX: x, gridZ: z, type };
+    
+    const key = `${x},${z}`;
+    this.sourceModels.set(key, mesh);
     this.sourcesGroup.add(mesh);
   }
 
@@ -648,7 +768,8 @@ private createLabel(x: number, z: number, text: string, color: number): void {
     const canvas = document.createElement('canvas');
     canvas.width = 128;
     canvas.height = 64;
-    const ctx = canvas.getContext('2d')!;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
     
     ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
     ctx.fillRect(0, 0, 128, 64);
@@ -672,6 +793,26 @@ private createLabel(x: number, z: number, text: string, color: number): void {
     sprite.userData = { isEfficiencyLabel: true };
     
     this.linesGroup.add(sprite);
+  }
+
+  private clearPowerLines(): void {
+    const linesToRemove: THREE.Object3D[] = [];
+    this.linesGroup.children.forEach(child => {
+      if (child.userData['isPowerLine'] || child.userData['isEfficiencyLabel']) {
+        linesToRemove.push(child);
+      }
+    });
+    
+    linesToRemove.forEach(line => {
+      if (line instanceof THREE.Line) {
+        line.geometry.dispose();
+        (line.material as THREE.Material).dispose();
+      } else if (line instanceof THREE.Sprite) {
+        line.material.map?.dispose();
+        line.material.dispose();
+      }
+      this.linesGroup.remove(line);
+    });
   }
 
   private createPowerLine(x1: number, z1: number, x2: number, z2: number): void {
@@ -737,9 +878,9 @@ private createLabel(x: number, z: number, text: string, color: number): void {
     });
 
     this.updateStats();
+    this.checkWinCondition();
   }
 
-  // ✅ MEJORA: Prevenir propagación sin setTimeout
   private preventUIEventPropagation(): void {
     const uiPanels = [
       '.ui-panel',
@@ -910,9 +1051,8 @@ private createLabel(x: number, z: number, text: string, color: number): void {
   private removeSource(x: number, z: number): void {
     if (!this.gridData[x][z]) return;
 
-    const sourceToRemove = this.sourcesGroup.children.find(
-      child => child.userData['gridX'] === x && child.userData['gridZ'] === z
-    );
+    const key = `${x},${z}`;
+    const sourceToRemove = this.sourceModels.get(key);
 
     if (sourceToRemove) {
       this.sourcesGroup.remove(sourceToRemove);
@@ -921,12 +1061,14 @@ private createLabel(x: number, z: number, text: string, color: number): void {
         if (child instanceof THREE.Mesh) {
           child.geometry.dispose();
           if (Array.isArray(child.material)) {
-            child.material.forEach(mat => mat.dispose());
+            child.material.forEach(mat => this.disposeMaterial(mat));
           } else {
-            child.material.dispose();
+            this.disposeMaterial(child.material);
           }
         }
       });
+      
+      this.sourceModels.delete(key);
     }
 
     const index = this.placedSources.findIndex(s => s.x === x && s.z === z);
@@ -960,11 +1102,9 @@ private createLabel(x: number, z: number, text: string, color: number): void {
     });
   }
 
-  // ✅ MEJORA: Visual actualizado con limpieza de humo
   private updateSourceVisual(source: PlacedSource): void {
-    const model = this.sourcesGroup.children.find(
-      child => child.userData['gridX'] === source.x && child.userData['gridZ'] === source.z
-    );
+    const key = `${source.x},${source.z}`;
+    const model = this.sourceModels.get(key);
     
     if (!model) return;
     
@@ -973,7 +1113,6 @@ private createLabel(x: number, z: number, text: string, color: number): void {
         const material = child.material as THREE.MeshLambertMaterial;
         
         if (source.isUnderMaintenance) {
-          // ✅ MEJORA: Pulso más suave
           const pulse = Math.sin(Date.now() * 0.003) * 0.3 + 0.5;
           material.emissive = new THREE.Color(0xFFFF00);
           material.emissiveIntensity = 0.2 + pulse * 0.2;
@@ -995,13 +1134,11 @@ private createLabel(x: number, z: number, text: string, color: number): void {
       }
     });
     
-    // Agregar humo si está crítico
     if (source.health < 30 && !source.isUnderMaintenance && !model.userData['hasSmoke']) {
       this.addSmokeParticles(source.x, source.z, model);
       model.userData['hasSmoke'] = true;
     }
     
-    // ✅ MEJORA: Limpiar humo cuando mejora la salud
     if (source.health >= 30 && model.userData['hasSmoke']) {
       const smoke = model.children.find(child => child.userData['isSmoke']);
       if (smoke) {
@@ -1048,7 +1185,6 @@ private createLabel(x: number, z: number, text: string, color: number): void {
     parent.add(particles);
   }
 
-  // ✅ MEJORA: Mantenimiento con mejor feedback
   performMaintenance(x: number, z: number, maintenanceType: 'basic' | 'standard' | 'premium'): void {
     const source = this.placedSources.find(s => s.x === x && s.z === z);
     if (!source) {
@@ -1093,9 +1229,8 @@ private createLabel(x: number, z: number, text: string, color: number): void {
       
       this.updateSourceVisual(source);
       
-      const model = this.sourcesGroup.children.find(
-        child => child.userData['gridX'] === x && child.userData['gridZ'] === z
-      );
+      const key = `${x},${z}`;
+      const model = this.sourceModels.get(key);
       
       if (model) {
         const smoke = model.children.find(child => child.userData['isSmoke']);
@@ -1109,9 +1244,8 @@ private createLabel(x: number, z: number, text: string, color: number): void {
     }, maintenance.duration);
   }
 
-  // ✅ MEJORA: Múltiples condiciones de Game Over
   private checkGameOverConditions(): void {
-    if (this.gameOver) return;
+    if (this.gameOver || this.gameWon) return;
 
     // 1. Fuente quemada
     const burnedSources = this.placedSources.filter(s => s.health <= 0);
@@ -1122,9 +1256,9 @@ private createLabel(x: number, z: number, text: string, color: number): void {
       return;
     }
     
-    // 2. Sin dinero y déficit crítico
-    if (this.money <= 0 && this.energyBalance < -200) {
-      this.gameOverReason = '¡Te quedaste sin dinero con un déficit energético crítico! 💸⚡';
+    // 2. Sin dinero
+    if (this.money <= 0) {
+      this.gameOverReason = '¡Te quedaste sin dinero! No puedes mantener la red eléctrica. 💸';
       this.triggerGameOver();
       return;
     }
@@ -1138,6 +1272,18 @@ private createLabel(x: number, z: number, text: string, color: number): void {
     }
   }
 
+  private checkWinCondition(): void {
+  if (this.gameOver || this.gameWon) return;
+  
+  // Contar casas conectadas con red estable
+  const connectedHouses = this.consumers.filter(c => c.connected).length;
+  
+  // Victoria: al menos 3 casas conectadas
+  if (connectedHouses >= 5 && this.placedSources.length > 0) {
+    this.triggerWin();
+  }
+}
+
   private triggerGameOver(): void {
     this.gameOver = true;
     
@@ -1149,6 +1295,19 @@ private createLabel(x: number, z: number, text: string, color: number): void {
     
     console.log('💀 GAME OVER:', this.gameOverReason);
   }
+
+  private triggerWin(): void {
+  this.gameWon = true;
+  
+  if (this.animationId) {
+    cancelAnimationFrame(this.animationId);
+  }
+  
+  this.applyWinVisuals();
+  
+  const connectedHouses = this.consumers.filter(c => c.connected).length;
+  console.log(`🎉 ¡VICTORIA! ${connectedHouses} casas conectadas con red estable`);
+}
 
   private applyGameOverVisuals(): void {
     this.scene.background = new THREE.Color(0x330000);
@@ -1166,19 +1325,59 @@ private createLabel(x: number, z: number, text: string, color: number): void {
     this.renderer.render(this.scene, this.camera);
   }
 
-  restartGame(): void {
-    this.sourcesGroup.clear();
-    this.linesGroup.clear();
+  private applyWinVisuals(): void {
+    this.scene.background = new THREE.Color(0x87CEEB);
     
-    this.gameOver = false;
-    this.gameOverReason = '';
-    this.money = 5000;
+    this.sourcesGroup.children.forEach(child => {
+      child.traverse((obj) => {
+        if (obj instanceof THREE.Mesh) {
+          const material = obj.material as THREE.MeshLambertMaterial;
+          material.emissive = new THREE.Color(0x00FF00);
+          material.emissiveIntensity = 0.6;
+        }
+      });
+    });
+    
+    this.consumersGroup.children.forEach(child => {
+      child.traverse((obj) => {
+        if (obj instanceof THREE.Mesh) {
+          const material = obj.material as THREE.MeshLambertMaterial;
+          material.emissive = new THREE.Color(0xFFD700);
+          material.emissiveIntensity = 0.8;
+        }
+      });
+    });
+    
+    this.renderer.render(this.scene, this.camera);
+  }
+
+  restartGame(): void {
+    this.cleanupGroup(this.sourcesGroup);
+    this.cleanupGroup(this.linesGroup);
+    
     this.placedSources = [];
     this.powerLines = [];
+    this.labels.clear();
+    this.sourceModels.clear();
+    
     this.gridData = Array(this.gridSize).fill(null).map(() => Array(this.gridSize).fill(null));
+    
+    this.gameOver = false;
+    this.gameWon = false;
+    this.gameOverReason = '';
+    this.money = 5000;
+    this.selectedSource = 'solar';
+    this.isConnecting = false;
+    this.connectionStart = null;
+    this.selectedMaintenanceType = null;
     
     this.scene.background = new THREE.Color(0x87CEEB);
     
+    this.consumers.forEach(c => c.connected = false);
+    this.updateNetworkState();
+    
+    this.lastDegradationUpdate = Date.now();
+    this.lastEconomyUpdate = Date.now();
     this.animate();
     
     console.log('🔄 Juego reiniciado');
@@ -1242,11 +1441,10 @@ private createLabel(x: number, z: number, text: string, color: number): void {
     }
   };
 
-  // ✅ MEJORA: Prevenir clicks sobre UI
   private onClick = (event: MouseEvent): void => {
     if (this.isOverUI) {
       return;
-}
+    }
 
     this.raycaster.setFromCamera(this.mouse, this.camera);
     const intersects = this.raycaster.intersectObjects(this.groundGroup.children);
@@ -1304,7 +1502,6 @@ private createLabel(x: number, z: number, text: string, color: number): void {
   };
 
   private onMouseWheel = (event: WheelEvent): void => {
-    // ✅ MEJORA: No hacer zoom si está sobre UI
     if (this.isOverUI) {
       return;
     }
@@ -1373,19 +1570,15 @@ private createLabel(x: number, z: number, text: string, color: number): void {
     window.removeEventListener('contextmenu', this.onRightClick);
   }
 
-  // ✅ MEJORA: Loop de animación optimizado
   private animate = (): void => {
-    if (this.gameOver) return; // No continuar animando si el juego terminó
+    if (this.gameOver || this.gameWon) return;
     
     this.animationId = requestAnimationFrame(this.animate);
     
-    // Animar aerogeneradores
     this.sourcesGroup.children.forEach(child => {
       if (child.userData['type'] === 'wind') {
         child.rotation.x += 0.03;
       }
-      
-      // Animar partículas de humo
       const smoke = child.children.find(c => c.userData['isSmoke']);
       if (smoke) {
         smoke.children.forEach(particle => {
@@ -1403,7 +1596,6 @@ private createLabel(x: number, z: number, text: string, color: number): void {
       }
     });
 
-    // Animar nubes
     this.clouds.forEach(cloud => {
       cloud.position.x += this.cloudSpeed;
       if (cloud.position.x > this.gridSize * this.cellSize / 2 + 5) {
@@ -1413,14 +1605,12 @@ private createLabel(x: number, z: number, text: string, color: number): void {
 
     const now = Date.now();
     
-    // ✅ MEJORA: Solo actualizar degradación y stats cada segundo
     if (now - this.lastDegradationUpdate >= this.degradationInterval) {
       this.updateDegradation();
       this.updateStats();
       this.lastDegradationUpdate = now;
     }
 
-    // ✅ MEJORA: Verificar condiciones de Game Over
     this.checkGameOverConditions();
 
     this.updateEconomy();
