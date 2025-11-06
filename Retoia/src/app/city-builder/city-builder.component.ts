@@ -36,7 +36,7 @@ interface GridCell {
 export class CityBuilderComponent implements OnInit, OnDestroy {
   @ViewChild('renderCanvas', { static: true }) 
   private canvasRef!: ElementRef<HTMLDivElement>;
-  router: any;
+  constructor(private router: Router) {}
   goToMenu() {
   this.router.navigate(['/niveles']);
   }
