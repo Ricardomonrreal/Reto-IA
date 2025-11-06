@@ -379,3 +379,22 @@
     0% { filter: brightness(100%); }
     100% { filter: brightness(150%); } /* Aclara el color para simular un brillo */
 }
+
+
+.back-btn {
+  background-color: #ffb347;
+  color: #fff;
+  font-weight: bold;
+  border: none;
+  border-radius: 12px;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-size: 18px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.back-btn:hover {
+  background-color: #ff9933;
+  transform: scale(1.05);
+}

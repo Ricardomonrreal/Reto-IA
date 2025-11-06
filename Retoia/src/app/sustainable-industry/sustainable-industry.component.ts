@@ -3,6 +3,9 @@ import { Component, ElementRef, OnInit, OnDestroy, ViewChild } from '@angular/co
 import { CommonModule, KeyValuePipe } from '@angular/common';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { Router } from '@angular/router';
+
+
 
 interface IndustrialBuilding {
   name: string;
@@ -25,7 +28,11 @@ interface IndustrialBuilding {
 export class SustainableIndustryComponent implements OnInit, OnDestroy {
   @ViewChild('renderCanvas', { static: true }) 
   private canvasRef!: ElementRef<HTMLDivElement>;
+constructor(private router: Router) {}
 
+ goToMenu() {
+  this.router.navigate(['/niveles']);
+  }
   // Estadísticas principales
   money = 15000;
   totalProduction = 0;
