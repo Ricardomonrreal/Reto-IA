@@ -2,13 +2,11 @@
     <div class="game-container">
         <div #renderCanvas class="canvas-container"></div>
 
-    <!-- UI Overlay -->
     <div class="ui-panel"
         (click)=$event.stopPropagation()>
         <div class="title">CIUDADES Y COMUNIDADES SOSTENIBLES ODS 11</div>
         <div class="subtitle">SELECCIONA CATEGORÍA:</div>
 
-        <!-- ⬅️ NAVEGACIÓN DE CATEGORÍAS -->
         <div class="category-nav">
             <button 
                 *ngFor="let category of ['Edificios', 'Casas', 'Calles', 'Decoración']"
@@ -19,13 +17,10 @@
                 {{ category }}
             </button>
         </div>
-        <!-- ------------------------------ -->
-
         <div class="subtitle current-category">
             Elementos de {{ selectedCategory }}
         </div>
         
-        <!-- Botón Borrador (Vertical, siempre visible) -->
         <button
         (click)="selectBuilding('eraser')"
         [class.selected]="selectedBuilding === 'eraser'"
@@ -37,11 +32,8 @@
             </span>
         </button>
 
-        <!-- Contenedor de la lista de edificios (Scroll horizontal) -->
         <div class="building-list-container">
-            <!-- ⬅️ FILTRADO CONDICIONAL DE BOTONES -->
             <ng-container *ngFor="let buildingKey of buildingCategories[selectedCategory]">
-                <!-- Usamos 'let building' para obtener los datos de buildingUIData -->
                 <ng-container *ngIf="buildingUIData[buildingKey] as building">
                     <button
                         (click)="selectBuilding(buildingKey)"
@@ -61,11 +53,42 @@
         <div class="instructions-bottom">
             <strong>Clic izquierdo:</strong> Construir/Borrar<br/>
             <strong>Clic derecho:</strong> Borrar rápido<br/>
-            <strong>Tecla R:</strong> Rotar edificio
+            <strong>Tecla R:</strong> Rotar edificio<br/>
+            <br>
+            <strong style="font-size: medium;">
+                Tu objetivo es alcanzar el mínimo ideal de áreas verdes en m² agregando objetos dentro del panel Decoración e instalar una ruta de transporte público usando objetos de paradas.
+            </strong>
         </div>
     </div>
             <div class="stats-panel">
-            <h3>📊 Estadísticas de la Ciudad</h3>
+            <h3>Economía y Objetivos</h3>
+            <p>
+                <strong>Presupuesto:</strong> 
+                <span [ngClass]="{'deficit-alert': currentBudget < 500}">
+                    ${{ currentBudget | number: '1.0-0' }}
+                </span>
+            </p>
+            
+            <hr>
+            
+            <h4>Transporte Público</h4>
+            <p>
+                <strong>Requisito Mínimo:</strong> 5 Bancas instaladas
+            </p>
+            <p [ngClass]="{'deficit-alert': !transportPublicoCompletado, 'surplus-ok': transportPublicoCompletado}">
+                <strong>Estado:</strong> 
+                {{ transportPublicoCompletado ? '✅ RUTA COMPLETA' : '❌ RUTA INCOMPLETA' }}
+            </p>
+
+            <div *ngIf="transportPublicoCompletado" class="validation-message ok">
+                ✅ Objetivo de Transporte Cumplido.
+            </div>
+            <div *ngIf="!transportPublicoCompletado" class="validation-message alert">
+                ⚠️ ¡Necesitas más bancas para la ruta!
+            </div>
+            <hr>
+
+            <h3>Estadísticas de la Ciudad</h3>
             <p>
                 <strong>Habitantes:</strong> {{ totalInhabitants }}
             </p>
